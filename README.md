@@ -1,4 +1,3 @@
-cat > README.md << 'EOF'
 # 🔒 MCP Security Scanner
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -67,7 +66,7 @@ python src/main.py scan --target http://example.com:3000 --verbose
 # Generate JSON report
 python src/main.py scan --target http://example.com:3000 --format json --output reports/my_scan.json
 
-# Generate HTML report
+# Generate HTML report (recommended!)
 python src/main.py scan --target http://example.com:3000 --format html --output reports/my_scan.html
 
 # List all available security checks
@@ -89,6 +88,14 @@ This will:
 - Run all security checks
 - Generate JSON and HTML reports in `reports/`
 - Display findings in terminal
+
+Then open the HTML report:
+```bash
+# View the beautiful HTML report
+firefox reports/demo_scan.html
+# or
+xdg-open reports/demo_scan.html
+```
 
 ## 📊 Example Output
 
@@ -125,14 +132,121 @@ Target: http://localhost:3000
      The MCP server at http://localhost:3000 does not use TLS/SSL encryption...
 ```
 
-### HTML Report Features
-- 📈 Executive summary with risk score
-- 📊 Statistics dashboard with visual metrics
-- 🎨 Color-coded severity levels (Critical/High/Medium/Low/Info)
-- 📝 Detailed vulnerability descriptions
-- 🔧 Actionable remediation steps
-- 📚 Evidence and affected components
-- 🔗 CWE/CVSS references
+### JSON Report
+
+Machine-readable format perfect for automation and CI/CD integration:
+```json
+{
+  "scan_id": "scan-20251015-220005",
+  "target": {
+    "host": "localhost",
+    "port": 3000,
+    "url": "http://localhost:3000"
+  },
+  "vulnerabilities": [
+    {
+      "id": "MCP-AUTH-001",
+      "title": "Missing Authentication",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8,
+      "cwe_id": "CWE-306"
+    }
+  ],
+  "risk_score": 26
+}
+```
+
+### HTML Report
+
+Beautiful, professional security report with:
+
+#### 📋 Executive Summary
+- Target server information
+- Scan metadata (ID, date, duration)
+- **Risk Score** with color-coded indicator (0-100 scale)
+- Quick statistics overview
+
+#### 📊 Statistics Dashboard
+Interactive visual dashboard showing:
+- Total security checks performed
+- Number of vulnerabilities found
+- Breakdown by severity (Critical/High/Medium/Low/Info)
+- Color-coded stat cards for quick assessment
+
+#### 🔍 Detailed Vulnerability Findings
+
+Each vulnerability includes:
+- **Severity Badge** - Color-coded (Red/Orange/Yellow/Blue/Green)
+- **Vulnerability ID** - Unique identifier (e.g., MCP-AUTH-001)
+- **Category** - Authentication, Encryption, Authorization, etc.
+- **Description** - Clear explanation of the security issue
+- **Evidence** - Specific findings from the scan
+  - Server details
+  - Exposed tools/resources
+  - Configuration issues
+- **Remediation** - Step-by-step fix instructions
+- **References** - CWE/CVSS scores when applicable
+
+#### 🎨 Professional Styling
+- Clean, modern design
+- Color-coded severity levels:
+  - 🔴 **Critical** - Red background, urgent attention needed
+  - 🟠 **High** - Orange background, high priority
+  - 🟡 **Medium** - Yellow background, should be addressed
+  - 🔵 **Low** - Blue background, minor issue
+  - 🟢 **Info** - Green background, informational
+- Responsive layout
+- Print-friendly
+- Professional typography
+- Box shadows and rounded corners
+- Easy to share with stakeholders
+
+#### Example HTML Report Structure:
+```
+🔒 MCP Security Scan Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Executive Summary
+├─ Target: http://localhost:3000
+├─ Server: Test Vulnerable Server
+├─ Scan ID: scan-20251015-220005
+├─ Duration: 0.00s
+└─ Risk Score: 26/100 ⚠️
+
+Statistics
+├─ Total Checks: 5
+├─ Vulnerabilities: 5
+├─ Critical: 2 🔴
+├─ High: 1 🟠
+├─ Medium: 0
+└─ Low: 1 🔵
+
+Vulnerabilities
+├─ [CRITICAL] Missing Authentication
+│  ├─ ID: MCP-AUTH-001 | Category: Authentication
+│  ├─ Description: No authentication required...
+│  ├─ Evidence:
+│  │  ├─ Server URL: http://localhost:3000
+│  │  ├─ Successfully connected without credentials
+│  │  └─ Available tools: 3
+│  └─ Remediation:
+│     ├─ Implement API keys
+│     ├─ Use OAuth 2.0
+│     └─ Configure mTLS
+│
+├─ [HIGH] Unencrypted Connection
+│  └─ ...
+│
+└─ [LOW] Default Port Configuration
+   └─ ...
+```
+
+**Perfect for:**
+- 📧 Emailing to security teams
+- 📑 Including in compliance reports
+- 🎤 Presenting to management
+- 💾 Archiving scan results
+- 📤 Sharing with clients
 
 ## 🏗️ Project Structure
 ```
@@ -156,6 +270,8 @@ mcp-security-scanner/
 ├── examples/                # Example vulnerable servers
 │   └── vulnerable_server.py # Intentionally vulnerable MCP server
 ├── reports/                 # Generated scan reports
+│   ├── *.json              # JSON format reports
+│   └── *.html              # HTML format reports
 ├── config/                  # Configuration files
 └── test_scanner.py          # Demo scanner test
 ```
@@ -218,6 +334,7 @@ async def _check_new_vulnerability(self, server: MCPServer):
 - [x] Authentication & encryption checks
 - [x] HTML/JSON report generation
 - [x] CLI interface
+- [x] Beautiful HTML reports with statistics
 - [ ] Network scanning (CIDR ranges)
 - [ ] Additional checks (CORS, rate limiting, SQL injection)
 - [ ] PDF report generation
