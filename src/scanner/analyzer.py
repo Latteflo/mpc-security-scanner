@@ -17,6 +17,7 @@ from models import MCPServer, Vulnerability, Severity
 from utils.logger import get_logger
 from checks.cors import check_cors_misconfiguration
 from checks.rate_limiting import check_rate_limiting
+from checks.injection import check_sql_injection, check_command_injection, check_path_traversal
 
 console = Console()
 logger = get_logger("analyzer")
@@ -49,10 +50,31 @@ class SecurityAnalyzer:
         await self._check_configuration(server)
         await self._check_cors(server)
         await self._check_rate_limiting(server)
+        await self._check_injection_attacks(server)
         
         logger.info(f"Analysis complete: {len(self.vulnerabilities)} issues found")
         
         return self.vulnerabilities
+    
+    async def _check_injection_attacks(self, server: MCPServer):
+        """Check for injection vulnerabilities"""
+        # SQL Injection
+        sql_vuln = await check_sql_injection(server)
+        if sql_vuln:
+            self.vulnerabilities.append(sql_vuln)
+            logger.warning(f"Found: {sql_vuln.title}")
+        
+        # Command Injection
+        cmd_vuln = await check_command_injection(server)
+        if cmd_vuln:
+            self.vulnerabilities.append(cmd_vuln)
+            logger.warning(f"Found: {cmd_vuln.title}")
+        
+        # Path Traversal
+        path_vuln = await check_path_traversal(server)
+        if path_vuln:
+            self.vulnerabilities.append(path_vuln)
+            logger.warning(f"Found: {path_vuln.title}")
     
     async def _check_cors(self, server: MCPServer):
         """Check for CORS misconfigurations"""
@@ -142,7 +164,6 @@ class SecurityAnalyzer:
         if not server.tools:
             return
         
-        # Check for dangerous tools
         dangerous_tools = []
         dangerous_patterns = [
             "execute", "exec", "shell", "command", "run",
@@ -191,7 +212,6 @@ class SecurityAnalyzer:
     async def _check_configuration(self, server: MCPServer):
         """Check for configuration issues"""
         
-        # Check if running on default port
         default_ports = [3000, 8080, 5000]
         if server.port in default_ports:
             vuln = Vulnerability.create(
@@ -219,7 +239,6 @@ class SecurityAnalyzer:
             self.vulnerabilities.append(vuln)
             logger.info(f"Found: {vuln.title}")
         
-        # Check for information disclosure
         if server.version:
             vuln = Vulnerability.create(
                 id="MCP-INFO-001",

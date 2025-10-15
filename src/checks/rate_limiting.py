@@ -3,10 +3,15 @@ Rate Limiting and DoS Protection Checks
 """
 
 import asyncio
+import sys
+from pathlib import Path
 from typing import Optional
-from ..models import Vulnerability, Severity, MCPServer
-from ..utils import http_post
-from ..utils.logger import get_logger
+
+# Fix imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from models import Vulnerability, Severity, MCPServer
+from utils import http_post
+from utils.logger import get_logger
 
 logger = get_logger("rate_limiting")
 
@@ -23,7 +28,6 @@ async def check_rate_limiting(server: MCPServer) -> Optional[Vulnerability]:
     """
     
     try:
-        # Send multiple rapid requests to test rate limiting
         num_requests = 50
         request_data = {
             "jsonrpc": "2.0",
@@ -36,7 +40,6 @@ async def check_rate_limiting(server: MCPServer) -> Optional[Vulnerability]:
         successful_requests = 0
         rate_limited = False
         
-        # Send requests rapidly
         start_time = asyncio.get_event_loop().time()
         
         for i in range(num_requests):
@@ -47,15 +50,13 @@ async def check_rate_limiting(server: MCPServer) -> Optional[Vulnerability]:
                     timeout=5.0
                 )
                 
-                # Check for rate limiting response codes
-                if status in [429, 503]:  # Too Many Requests or Service Unavailable
+                if status in [429, 503]:
                     rate_limited = True
                     break
                 elif status == 200:
                     successful_requests += 1
                     
             except asyncio.TimeoutError:
-                # Timeout could indicate rate limiting or DoS protection
                 break
             except Exception:
                 break
@@ -63,7 +64,6 @@ async def check_rate_limiting(server: MCPServer) -> Optional[Vulnerability]:
         end_time = asyncio.get_event_loop().time()
         duration = end_time - start_time
         
-        # If we successfully sent many requests without being rate limited, that's a problem
         if successful_requests >= 40 and not rate_limited:
             requests_per_second = successful_requests / duration if duration > 0 else 0
             
@@ -94,12 +94,11 @@ async def check_rate_limiting(server: MCPServer) -> Optional[Vulnerability]:
                     "Server accepted all requests"
                 ],
                 affected_component="Rate Limiting",
-                cwe_id="CWE-770",  # Allocation of Resources Without Limits
+                cwe_id="CWE-770",
                 cvss_score=7.5
             )
         
         elif successful_requests >= 30 and rate_limited:
-            # Rate limiting exists but threshold might be too high
             return Vulnerability.create(
                 id="MCP-RATE-002",
                 title="Weak Rate Limiting Configuration",
@@ -127,7 +126,6 @@ async def check_rate_limiting(server: MCPServer) -> Optional[Vulnerability]:
                 cwe_id="CWE-770"
             )
         
-        # Check for Retry-After header when rate limited
         if rate_limited:
             logger.info(f"Rate limiting detected at {server.url}")
         

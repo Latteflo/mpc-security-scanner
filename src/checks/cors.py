@@ -2,10 +2,15 @@
 CORS (Cross-Origin Resource Sharing) Security Checks
 """
 
+import sys
+from pathlib import Path
 from typing import Optional
-from ..models import Vulnerability, Severity, MCPServer
-from ..utils import http_get
-from ..utils.logger import get_logger
+
+# Fix imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from models import Vulnerability, Severity, MCPServer
+from utils import http_get
+from utils.logger import get_logger
 
 logger = get_logger("cors")
 
@@ -66,7 +71,6 @@ async def check_cors_misconfiguration(server: MCPServer) -> Optional[Vulnerabili
             )
         
         elif acao == "https://evil.com":
-            # Server reflects any origin - even worse!
             return Vulnerability.create(
                 id="MCP-CORS-002",
                 title="CORS Origin Reflection Vulnerability",
@@ -95,7 +99,6 @@ async def check_cors_misconfiguration(server: MCPServer) -> Optional[Vulnerabili
                 cvss_score=9.1
             )
         
-        # Check for credentials with wildcard (very dangerous)
         acac = response_headers.get("access-control-allow-credentials", "").lower()
         if acao == "*" and acac == "true":
             return Vulnerability.create(
