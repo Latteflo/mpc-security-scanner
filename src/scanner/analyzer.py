@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from models import MCPServer, Vulnerability, Severity
 from utils.logger import get_logger
 from checks.cors import check_cors_misconfiguration
+from checks.rate_limiting import check_rate_limiting
 
 console = Console()
 logger = get_logger("analyzer")
@@ -47,6 +48,7 @@ class SecurityAnalyzer:
         await self._check_tools_exposure(server)
         await self._check_configuration(server)
         await self._check_cors(server)
+        await self._check_rate_limiting(server)
         
         logger.info(f"Analysis complete: {len(self.vulnerabilities)} issues found")
         
@@ -58,6 +60,13 @@ class SecurityAnalyzer:
         if cors_vuln:
             self.vulnerabilities.append(cors_vuln)
             logger.warning(f"Found: {cors_vuln.title}")
+    
+    async def _check_rate_limiting(self, server: MCPServer):
+        """Check for rate limiting and DoS protection"""
+        rate_vuln = await check_rate_limiting(server)
+        if rate_vuln:
+            self.vulnerabilities.append(rate_vuln)
+            logger.warning(f"Found: {rate_vuln.title}")
     
     async def _check_authentication(self, server: MCPServer):
         """Check for authentication issues"""
