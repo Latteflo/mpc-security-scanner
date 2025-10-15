@@ -15,6 +15,7 @@ from rich.console import Console
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from models import MCPServer, Vulnerability, Severity
 from utils.logger import get_logger
+from checks.cors import check_cors_misconfiguration
 
 console = Console()
 logger = get_logger("analyzer")
@@ -45,10 +46,18 @@ class SecurityAnalyzer:
         await self._check_encryption(server)
         await self._check_tools_exposure(server)
         await self._check_configuration(server)
+        await self._check_cors(server)
         
         logger.info(f"Analysis complete: {len(self.vulnerabilities)} issues found")
         
         return self.vulnerabilities
+    
+    async def _check_cors(self, server: MCPServer):
+        """Check for CORS misconfigurations"""
+        cors_vuln = await check_cors_misconfiguration(server)
+        if cors_vuln:
+            self.vulnerabilities.append(cors_vuln)
+            logger.warning(f"Found: {cors_vuln.title}")
     
     async def _check_authentication(self, server: MCPServer):
         """Check for authentication issues"""
