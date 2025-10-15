@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*.so
+.Python
+*.egg-info
+dist
+build
+
+# Virtual environments
+.venv
+venv
+ENV
+env
+
+# IDEs
+.vscode
+.idea
+*.swp
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+
+# Nix
+flake.nix
+flake.lock
+result
+
+# Reports and logs
+reports/*
+!reports/.gitkeep
+*.log
+
+# Config with secrets
+config/secrets.yaml
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
