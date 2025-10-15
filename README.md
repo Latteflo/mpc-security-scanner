@@ -13,3 +13,10 @@ A comprehensive security auditing tool for Model Context Protocol (MCP) servers.
 ## 🎯 Why This Tool?
 
 With over **7,000 MCP servers** currently exposed on the internet, many lack proper security controls. This scanner helps identify and remediate critical security issues before they're exploited.
+
+## 📚 Documentation
+
+- **[Usage Guide](docs/USAGE.md)** - Detailed usage instructions
+- **[API Reference](docs/API.md)** - Complete API documentation
+- **[Security Guide](docs/SECURITY.md)** - Security best practices
+- **[Contributing](CONTRIBUTING.md)** - How to contribute
