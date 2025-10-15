@@ -95,3 +95,43 @@ python src/main.py scan --target http://example.com:3000 \
 ### Import errors
 - Ensure virtual environment is activated
 - Run `pip install -r requirements.txt`
+
+## New Features (v0.2.0)
+
+### PDF Reports
+
+Generate professional PDF security reports:
+```bash
+python src/main.py scan --target http://example.com:3000 \
+  --format pdf \
+  --output compliance_report.pdf
+```
+
+PDF reports include:
+- Executive summary with risk score
+- Detailed vulnerability findings
+- Color-coded severity levels
+- Remediation guidance
+- CWE/CVSS references
+
+### Advanced Security Checks
+
+**Test for SQL Injection:**
+```bash
+# Automatically tests SQL-related tools
+python src/main.py scan --target http://example.com:3000
+```
+
+**Test for Command Injection:**
+```bash
+# Automatically tests command execution tools
+python src/main.py scan --target http://example.com:3000
+```
+
+**Test for Path Traversal:**
+```bash
+# Automatically tests file access tools
+python src/main.py scan --target http://example.com:3000
+```
+
+All checks run automatically during a scan!
