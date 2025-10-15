@@ -49,8 +49,8 @@ Thank you for your interest in contributing! 🎉
 ## Development Setup
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/mcp-security-scanner.git
-cd mcp-security-scanner
+git clone https://github.com/YOUR_USERNAME/mpc-security-scanner.git
+cd mpc-security-scanner
 
 # Create virtual environment
 python -m venv .venv
