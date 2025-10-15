@@ -23,10 +23,10 @@ class ScanReport(BaseModel):
     duration_seconds: Optional[float] = Field(default=None)
     
     # Target information
-    target: MCPServer = Field(description="Scanned server")
+    target: Dict[str, Any] = Field(description="Scanned server")
     
     # Results
-    vulnerabilities: List[Vulnerability] = Field(default_factory=list)
+    vulnerabilities: List[Dict[str, Any]] = Field(default_factory=list)
     
     # Statistics
     total_checks: int = Field(default=0, description="Total checks performed")
@@ -48,7 +48,9 @@ class ScanReport(BaseModel):
         }
         
         for vuln in self.vulnerabilities:
-            counts[vuln.severity.value] += 1
+            severity = vuln.get("severity", "INFO")
+            if severity in counts:
+                counts[severity] += 1
         
         return counts
     
@@ -56,14 +58,18 @@ class ScanReport(BaseModel):
     def risk_score(self) -> float:
         """Calculate overall risk score (0-100)"""
         weights = {
-            Severity.CRITICAL: 10,
-            Severity.HIGH: 5,
-            Severity.MEDIUM: 2,
-            Severity.LOW: 1,
-            Severity.INFO: 0
+            "CRITICAL": 10,
+            "HIGH": 5,
+            "MEDIUM": 2,
+            "LOW": 1,
+            "INFO": 0
         }
         
-        score = sum(weights[v.severity] for v in self.vulnerabilities)
+        score = 0
+        for vuln in self.vulnerabilities:
+            severity = vuln.get("severity", "INFO")
+            score += weights.get(severity, 0)
+        
         return min(score, 100)
     
     def to_dict(self) -> dict:
