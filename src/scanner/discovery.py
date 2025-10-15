@@ -139,8 +139,8 @@ class MCPDiscovery:
             if "result" in response:
                 server_info = response["result"].get("serverInfo", {})
                 return server_info.get("name")
-        except:
-            pass
+        except (KeyError, TypeError, AttributeError) as e:
+            logger.debug(f"Could not extract server name: {e}")
         return None
     
     def _extract_server_version(self, response: dict) -> Optional[str]:
@@ -149,8 +149,8 @@ class MCPDiscovery:
             if "result" in response:
                 server_info = response["result"].get("serverInfo", {})
                 return server_info.get("version")
-        except:
-            pass
+        except (KeyError, TypeError, AttributeError) as e:
+            logger.debug(f"Could not extract server version: {e}")
         return None
     
     async def _probe_capabilities(self, server: MCPServer):
@@ -249,8 +249,8 @@ class MCPDiscovery:
                     # If we got valid response without auth, no auth required
                     if "result" in response:
                         return False
-                except:
-                    pass
+                except json.JSONDecodeError as e:
+                    logger.debug(f"Could not parse auth check response: {e}")
             
             # Check for auth headers
             if "www-authenticate" in str(headers).lower():

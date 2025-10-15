@@ -114,7 +114,11 @@ async def check_sql_injection(server: MCPServer) -> Optional[Vulnerability]:
                                 cwe_id="CWE-89",
                                 cvss_score=9.8
                             )
-                    except Exception:
+                    except (ConnectionError, TimeoutError) as e:
+                        logger.debug(f"Connection error testing {tool}: {e}")
+                        continue
+                    except Exception as e:
+                        logger.debug(f"Unexpected error testing {tool}: {e}")
                         continue
             
             # If SQL tools exist but no injection found, still warn about potential
@@ -248,7 +252,11 @@ async def check_command_injection(server: MCPServer) -> Optional[Vulnerability]:
                                 cwe_id="CWE-78",
                                 cvss_score=9.8
                             )
-                    except Exception:
+                    except (ConnectionError, TimeoutError) as e:
+                        logger.debug(f"Connection error testing {tool}: {e}")
+                        continue
+                    except Exception as e:
+                        logger.debug(f"Unexpected error testing {tool}: {e}")
                         continue
             
             # Warn about command execution tools
@@ -383,7 +391,11 @@ async def check_path_traversal(server: MCPServer) -> Optional[Vulnerability]:
                                 cwe_id="CWE-22",
                                 cvss_score=8.6
                             )
-                    except Exception:
+                    except (ConnectionError, TimeoutError) as e:
+                        logger.debug(f"Connection error testing {tool}: {e}")
+                        continue
+                    except Exception as e:
+                        logger.debug(f"Unexpected error testing {tool}: {e}")
                         continue
             
             # Warn about file access tools
