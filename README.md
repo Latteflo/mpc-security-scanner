@@ -95,6 +95,48 @@ firefox reports/demo_scan.html
 xdg-open reports/demo_scan.pdf
 ```
 
+
+## 🔒 Security & Responsible Use
+
+### ⚠️ Authorization Required
+
+**ALWAYS obtain written authorization before scanning systems you don't own.**
+
+Unauthorized scanning may violate:
+- Computer Fraud and Abuse Act (US)
+- Computer Misuse Act (UK)  
+- Similar laws in other jurisdictions
+
+### Security Features (v0.2.1+)
+
+- ✅ **SSRF Protection**: Blocks private IP scanning by default
+- ✅ **SSL Verification**: Enabled by default, protects against MITM
+- ✅ **Metadata Blocking**: Prevents cloud credential exposure
+- ✅ **Explicit Flags**: Dangerous operations require explicit consent
+
+### New Security Flags
+```bash
+# Scan with default security settings
+python src/main.py scan --target https://example.com:3000
+
+# Scan private network (requires authorization!)
+python src/main.py scan --target http://192.168.1.10:3000 --allow-private
+
+# Disable SSL verification (testing only!)
+python src/main.py scan --target https://test-server.local --insecure
+
+# Both flags for local testing
+python src/main.py scan --target http://localhost:3000 --allow-private --insecure
+```
+
+### Best Practices
+
+1. **Get Authorization**: Written permission from system owner
+2. **Scope Agreement**: Define what you're allowed to scan
+3. **Time Windows**: Scan during approved maintenance windows
+4. **Rate Limiting**: Use reasonable delays between requests
+5. **Report Responsibly**: Give time to fix before public disclosure
+
 ## 📊 Example Output
 
 ### Terminal
@@ -314,4 +356,4 @@ MIT License - see [LICENSE](LICENSE) file.
 
 **Made with ❤️ for the security community** | [⭐ Star this repo](https://github.com/Latteflo/mpc-security-scanner)
 
-**NEW in v0.2.0:** PDF Reports, Injection Checks, CORS Detection, Rate Limiting!
+**NEW in v0.2.1:** PDF Reports, Injection Checks, CORS Detection, Rate Limiting!

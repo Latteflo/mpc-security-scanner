@@ -25,8 +25,7 @@ logger = get_logger("discovery")
 class MCPDiscovery:
     """Discovers and probes MCP servers"""
     
-    def __init__(self, verify_ssl: bool = True):
-        self.verify_ssl = verify_ssl
+    def __init__(self):
         self.timeout = 10.0
     
     async def probe_server(self, target: str) -> Optional[MCPServer]:
@@ -91,8 +90,7 @@ class MCPDiscovery:
             status, response_text, headers = await http_post(
                 url,
                 mcp_request,
-                timeout=self.timeout,
-                verify_ssl=self.verify_ssl
+                timeout=self.timeout
             )
             
             # Check if response looks like MCP
@@ -175,8 +173,7 @@ class MCPDiscovery:
             status, response_text, _ = await http_post(
                 url,
                 tools_request,
-                timeout=self.timeout,
-                verify_ssl=self.verify_ssl
+                timeout=self.timeout
             )
             
             if status == 200:
@@ -199,8 +196,7 @@ class MCPDiscovery:
             status, response_text, _ = await http_post(
                 url,
                 resources_request,
-                timeout=self.timeout,
-                verify_ssl=self.verify_ssl
+                timeout=self.timeout
             )
             
             if status == 200:

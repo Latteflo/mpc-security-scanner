@@ -39,12 +39,12 @@
             <h2>Executive Summary</h2>
             <p><strong>Target:</strong> http://localhost:3000</p>
             <p><strong>Server Name:</strong> Test Vulnerable Server</p>
-            <p><strong>Scan ID:</strong> scan-20251015-220005</p>
-            <p><strong>Date:</strong> 2025-10-15 22:00:05.289629</p>
+            <p><strong>Scan ID:</strong> scan-20251015-225140</p>
+            <p><strong>Date:</strong> 2025-10-15 22:51:40.381835</p>
             <p><strong>Duration:</strong> 0.00s</p>
             
             <div class="risk-score risk-low">
-                Risk Score: 26/100
+                Risk Score: 33/100
             </div>
         </div>
         
@@ -56,7 +56,7 @@
             </div>
             <div class="stat">
                 <div>Vulnerabilities</div>
-                <div class="stat-value" style="color: #d32f2f;">5</div>
+                <div class="stat-value" style="color: #d32f2f;">7</div>
             </div>
             <div class="stat">
                 <div>Critical</div>
@@ -64,11 +64,11 @@
             </div>
             <div class="stat">
                 <div>High</div>
-                <div class="stat-value" style="color: #f57c00;">1</div>
+                <div class="stat-value" style="color: #f57c00;">2</div>
             </div>
             <div class="stat">
                 <div>Medium</div>
-                <div class="stat-value" style="color: #fbc02d;">0</div>
+                <div class="stat-value" style="color: #fbc02d;">1</div>
             </div>
             <div class="stat">
                 <div>Low</div>
@@ -176,6 +176,51 @@
             <p><strong>Evidence:</strong></p>
             <ul>
                 <li>Disclosed version: 1.0.0</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability high">
+            <h3>
+                <span class="severity-badge high-badge">HIGH</span>
+                Command Execution Tools Exposed
+            </h3>
+            <p><strong>ID:</strong> MCP-INJ-004 | <strong>Category:</strong> Injection</p>
+            <p>The MCP server at http://localhost:3000 exposes command execution tools (execute_command). These are high-risk tools that could allow command injection if not properly secured.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Secure command execution tools:
+- Implement strict input validation
+- Use allowlists for permitted commands
+- Never execute shell commands with user input
+- Consider removing or restricting these tools
+- Require authentication and authorization
+- Log all command execution attempts</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Command execution tools: execute_command</li>
+                <li>High-risk functionality exposed</li>
+                <li>Potential for system compromise</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability medium">
+            <h3>
+                <span class="severity-badge medium-badge">MEDIUM</span>
+                File Access Tools With Potential Path Traversal Risk
+            </h3>
+            <p><strong>ID:</strong> MCP-INJ-006 | <strong>Category:</strong> Injection</p>
+            <p>The MCP server at http://localhost:3000 exposes file access tools (read_file) that may be vulnerable to path traversal if input validation is insufficient.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Secure file access tools:
+- Implement strict path validation
+- Use allowlists for permitted directories
+- Canonicalize paths before access
+- Never trust user-supplied file paths
+- Restrict file system access scope</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>File access tools: read_file</li>
+                <li>Potential path traversal risk</li>
+                <li>Input validation status unknown</li>
             </ul>
         </div>
 

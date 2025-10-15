@@ -26,8 +26,7 @@ logger = get_logger("analyzer")
 class SecurityAnalyzer:
     """Analyzes MCP servers for security vulnerabilities"""
     
-    def __init__(self, verify_ssl: bool = True):
-        self.verify_ssl = verify_ssl
+    def __init__(self):
         self.vulnerabilities: List[Vulnerability] = []
     
     async def scan(self, server: MCPServer) -> List[Vulnerability]:

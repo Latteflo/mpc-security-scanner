@@ -1,8 +1,8 @@
 {
-  "scan_id": "scan-20251015-220005",
-  "started_at": "2025-10-15 22:00:05.286978",
-  "completed_at": "2025-10-15 22:00:05.286995",
-  "duration_seconds": 1.7e-05,
+  "scan_id": "scan-20251015-225140",
+  "started_at": "2025-10-15 22:51:40.377856",
+  "completed_at": "2025-10-15 22:51:40.377884",
+  "duration_seconds": 2.8e-05,
   "target": {
     "host": "localhost",
     "port": 3000,
@@ -21,7 +21,7 @@
     ],
     "has_authentication": false,
     "has_encryption": false,
-    "discovered_at": "2025-10-15 22:00:05.274093",
+    "discovered_at": "2025-10-15 22:51:40.340032",
     "last_scanned": null,
     "metadata": {}
   },
@@ -43,7 +43,7 @@
       "affected_component": "MCP Server Authentication",
       "remediation": "Implement authentication mechanism such as:\n- API keys\n- OAuth 2.0\n- Mutual TLS (mTLS)\n- JWT tokens",
       "references": [],
-      "discovered_at": "2025-10-15 22:00:05.279896"
+      "discovered_at": "2025-10-15 22:51:40.345640"
     },
     {
       "id": "MCP-CRYPTO-001",
@@ -61,7 +61,7 @@
       "affected_component": "Transport Layer",
       "remediation": "Enable TLS/SSL encryption:\n- Use HTTPS instead of HTTP\n- Install valid SSL certificate\n- Configure TLS 1.2 or higher\n- Disable weak cipher suites",
       "references": [],
-      "discovered_at": "2025-10-15 22:00:05.281104"
+      "discovered_at": "2025-10-15 22:51:40.346856"
     },
     {
       "id": "MCP-AUTHZ-001",
@@ -79,7 +79,7 @@
       "affected_component": "Tool Access Control",
       "remediation": "Implement proper authorization:\n- Role-based access control (RBAC)\n- Principle of least privilege\n- Input validation for all tools\n- Audit logging for tool usage",
       "references": [],
-      "discovered_at": "2025-10-15 22:00:05.282094"
+      "discovered_at": "2025-10-15 22:51:40.347838"
     },
     {
       "id": "MCP-CONFIG-001",
@@ -96,7 +96,7 @@
       "affected_component": "Server Configuration",
       "remediation": "Change to a non-standard port:\n- Use a random high port (>10000)\n- Update firewall rules accordingly\n- Document the port change",
       "references": [],
-      "discovered_at": "2025-10-15 22:00:05.283077"
+      "discovered_at": "2025-10-15 22:51:40.348814"
     },
     {
       "id": "MCP-INFO-001",
@@ -112,11 +112,47 @@
       "affected_component": "Server Headers",
       "remediation": "Minimize information disclosure:\n- Remove or obfuscate version headers\n- Use generic error messages\n- Keep software updated regardless",
       "references": [],
-      "discovered_at": "2025-10-15 22:00:05.284007"
+      "discovered_at": "2025-10-15 22:51:40.349799"
+    },
+    {
+      "id": "MCP-INJ-004",
+      "title": "Command Execution Tools Exposed",
+      "description": "The MCP server at http://localhost:3000 exposes command execution tools (execute_command). These are high-risk tools that could allow command injection if not properly secured.",
+      "severity": "HIGH",
+      "category": "Injection",
+      "cwe_id": "CWE-78",
+      "cvss_score": 8.1,
+      "evidence": [
+        "Command execution tools: execute_command",
+        "High-risk functionality exposed",
+        "Potential for system compromise"
+      ],
+      "affected_component": "Command Execution Tools",
+      "remediation": "Secure command execution tools:\n- Implement strict input validation\n- Use allowlists for permitted commands\n- Never execute shell commands with user input\n- Consider removing or restricting these tools\n- Require authentication and authorization\n- Log all command execution attempts",
+      "references": [],
+      "discovered_at": "2025-10-15 22:51:40.366177"
+    },
+    {
+      "id": "MCP-INJ-006",
+      "title": "File Access Tools With Potential Path Traversal Risk",
+      "description": "The MCP server at http://localhost:3000 exposes file access tools (read_file) that may be vulnerable to path traversal if input validation is insufficient.",
+      "severity": "MEDIUM",
+      "category": "Injection",
+      "cwe_id": "CWE-22",
+      "cvss_score": null,
+      "evidence": [
+        "File access tools: read_file",
+        "Potential path traversal risk",
+        "Input validation status unknown"
+      ],
+      "affected_component": "File Access Tools",
+      "remediation": "Secure file access tools:\n- Implement strict path validation\n- Use allowlists for permitted directories\n- Canonicalize paths before access\n- Never trust user-supplied file paths\n- Restrict file system access scope",
+      "references": [],
+      "discovered_at": "2025-10-15 22:51:40.373591"
     }
   ],
   "total_checks": 5,
-  "passed_checks": 0,
-  "failed_checks": 5,
+  "passed_checks": -2,
+  "failed_checks": 7,
   "metadata": {}
 }

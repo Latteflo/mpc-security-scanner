@@ -28,7 +28,7 @@ class ReportGenerator:
         server_info: MCPServer,
         vulnerabilities: List[Vulnerability],
         output_path: str,
-        format: str = "json"
+        format: str = "json"  # json, html, pdf, terminal
     ) -> str:
         """
         Generate a report
@@ -231,3 +231,22 @@ class ReportGenerator:
 """
         
         return html
+
+# PDF generation support
+async def _generate_pdf(self, report: ScanReport, output_path: str,
+                       server_info: MCPServer, vulnerabilities: List[Vulnerability]) -> str:
+    """Generate PDF report"""
+    from .pdf_reporter import PDFReportGenerator
+    
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    pdf_generator = PDFReportGenerator()
+    pdf_path = pdf_generator.generate(
+        server_info=server_info,
+        vulnerabilities=vulnerabilities,
+        output_path=str(output_file)
+    )
+    
+    logger.info(f"PDF report saved to {pdf_path}")
+    return pdf_path

@@ -16,7 +16,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.2.1")
+@click.version_option(version="0.1.0")
 def cli():
     """
     🔒 MCP Security Scanner & Auditor
@@ -31,70 +31,10 @@ def cli():
 @click.option("--output", "-o", default="reports/scan_results.json", help="Output file")
 @click.option("--format", "-f", type=click.Choice(["json", "html", "pdf", "terminal"]), default="terminal")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
-@click.option("--allow-private", is_flag=True, help="Allow scanning private IP addresses (use with caution)")
-@click.option("--insecure", is_flag=True, help="Disable SSL certificate verification (not recommended)")
-def scan(target: str, output: str, format: str, verbose: bool, allow_private: bool, insecure: bool):
+def scan(target: str, output: str, format: str, verbose: bool):
     """Scan an MCP server for security vulnerabilities."""
     
     async def run_scan():
-        # SSRF Protection - Validate target URL
-        from urllib.parse import urlparse
-        import ipaddress
-        
-        # Validate target URL
-        try:
-            parsed = urlparse(target)
-            
-            # Block metadata endpoints (cloud providers)
-            blocked_hosts = [
-                '169.254.169.254',
-                'metadata.google.internal',
-                'metadata.azure.com',
-                'metadata',
-            ]
-            
-            hostname_lower = parsed.hostname.lower() if parsed.hostname else ''
-            for blocked in blocked_hosts:
-                if blocked in hostname_lower:
-                    console.print("[bold red]❌ Cannot scan cloud metadata endpoints[/bold red]")
-                    console.print("[dim]This could expose cloud credentials[/dim]")
-                    return
-            
-            # Check if it's a private IP
-            try:
-                ip = ipaddress.ip_address(parsed.hostname)
-                
-                if ip.is_private and not allow_private:
-                    console.print(f"[bold yellow]⚠️  Private IP address detected: {parsed.hostname}[/bold yellow]")
-                    console.print("[bold red]❌ Scanning private IPs requires authorization[/bold red]")
-                    console.print("[dim]Use --allow-private flag if you own this network[/dim]")
-                    return
-                
-                if ip.is_loopback and not allow_private:
-                    console.print("[bold yellow]⚠️  Localhost address detected[/bold yellow]")
-                    console.print("[dim]Use --allow-private to scan local servers[/dim]")
-                    return
-                    
-            except ValueError:
-                # Not an IP address, it's a domain - that's fine
-                pass
-                
-        except Exception as e:
-            console.print(f"[bold red]❌ Invalid URL:[/bold red] {str(e)}")
-            return
-        
-        # Show warning if scanning private networks
-        if allow_private:
-            console.print("[bold yellow]⚠️  Private IP scanning enabled[/bold yellow]")
-            console.print("[dim]Ensure you have authorization to scan this network[/dim]\n")
-        
-        # SSL Verification Warning
-        if insecure:
-            console.print("[bold yellow]⚠️  SSL verification disabled![/bold yellow]")
-            console.print("[bold red]⚠️  Connection is vulnerable to MITM attacks[/bold red]")
-            console.print("[dim]Only use this for testing environments\n[/dim]")
-        
-        
         # Setup logger
         log_level = "DEBUG" if verbose else "INFO"
         logger = setup_logger(level=log_level)
@@ -105,7 +45,7 @@ def scan(target: str, output: str, format: str, verbose: bool, allow_private: bo
         try:
             # Phase 1: Discovery
             with console.status("[bold green]Discovering MCP server..."):
-                discovery = MCPDiscovery(verify_ssl=not insecure)
+                discovery = MCPDiscovery()
                 server_info = await discovery.probe_server(target)
                 
                 if not server_info:
@@ -124,7 +64,7 @@ def scan(target: str, output: str, format: str, verbose: bool, allow_private: bo
             
             # Phase 2: Analysis
             with console.status("[bold green]Analyzing security posture..."):
-                analyzer = SecurityAnalyzer(verify_ssl=not insecure)
+                analyzer = SecurityAnalyzer()
                 vulnerabilities = await analyzer.scan(server_info)
                 
                 console.print(f"[green]✓[/green] Analysis complete")
@@ -204,7 +144,7 @@ def discover(range: str, ports: str):
         
         port_list = [int(p.strip()) for p in ports.split(",")]
         
-        discovery = MCPDiscovery(verify_ssl=not insecure)
+        discovery = MCPDiscovery()
         servers = await discovery.network_scan(range, port_list)
         
         if not servers:
