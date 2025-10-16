@@ -305,3 +305,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+@cli.command()
+def interactive():
+    """Interactive wizard mode for easy scanning"""
+    import subprocess
+    import sys
+    
+    # Run the wizard script
+    subprocess.run([sys.executable, "src/interactive.py"])

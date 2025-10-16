@@ -1,11 +1,8 @@
 # 🔒 MCP Security Scanner
 
 [![Tests](https://github.com/Latteflo/mpc-security-scanner/workflows/Tests/badge.svg)](https://github.com/Latteflo/mpc-security-scanner/actions/workflows/tests.yml)
-[![Code Quality](https://github.com/Latteflo/mpc-security-scanner/workflows/Code%20Quality/badge.svg)](https://github.com/Latteflo/mpc-security-scanner/actions/workflows/code-quality.yml)
-[![Security](https://github.com/Latteflo/mpc-security-scanner/workflows/Security/badge.svg)](https://github.com/Latteflo/mpc-security-scanner/actions/workflows/security.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A comprehensive security auditing tool for Model Context Protocol (MCP) servers. Automatically detects vulnerabilities, misconfigurations, and security weaknesses in MCP deployments.
 
@@ -15,8 +12,10 @@ With over **7,000 MCP servers** currently exposed on the internet, many lack pro
 
 ## ✨ Features
 
-- 🔍 **Automatic Discovery** - Probe and fingerprint MCP servers
-- 🛡️ **10+ Security Checks** - Comprehensive vulnerability detection
+### 🔍 Core Scanning
+- **Single Server Scanning** - Deep security analysis of individual MCP servers
+- **Network Scanning** - CIDR range scanning to discover MCP servers
+- **10+ Security Checks** - Comprehensive vulnerability detection
   - Authentication & Authorization
   - Encryption (TLS/SSL)
   - CORS Misconfigurations
@@ -25,25 +24,22 @@ With over **7,000 MCP servers** currently exposed on the internet, many lack pro
   - Command Injection
   - Path Traversal
   - Information Disclosure
-- 📊 **Multiple Report Formats** - JSON, HTML, **PDF**, and terminal output
-- 🎨 **Professional Reports** - Executive summaries, risk scoring, remediation guidance
-- ⚡ **Fast & Async** - Efficient async/await architecture
-- 🔧 **Extensible** - Easy to add custom checks
 
-## 🚨 Vulnerabilities Detected
+### 🎨 User Experience
+- **Interactive Mode** - Guided scanning wizard for easy use
+- **CLI Mode** - Full command-line interface for automation
+- **Beautiful Output** - Rich terminal output with progress bars
 
-| Category | Vulnerabilities | Severity |
-|----------|----------------|----------|
-| **Authentication** | Missing authentication, weak credentials | 🔴 CRITICAL |
-| **Encryption** | Unencrypted connections, weak TLS | 🟠 HIGH |
-| **CORS** | Wildcard origins, credential leaks | 🔴 CRITICAL |
-| **Rate Limiting** | No DoS protection, weak limits | 🟠 HIGH |
-| **SQL Injection** | Unvalidated SQL queries | 🔴 CRITICAL |
-| **Command Injection** | Shell command execution | 🔴 CRITICAL |
-| **Path Traversal** | Unauthorized file access | 🔴 CRITICAL |
-| **Configuration** | Default ports, version disclosure | 🔵 LOW/INFO |
+### 📊 Reporting
+- **JSON** - Machine-readable for automation
+- **HTML** - Beautiful web-based reports
+- **PDF** - Professional documents for stakeholders
+- **DOCX** - Microsoft Word format for easy editing
 
-**Total: 10+ security checks covering OWASP Top 10 and CWE database**
+### 🔌 Extensibility
+- **Plugin System** - Create custom security checks
+- **Auto-loading** - Drop plugins in `plugins/` directory
+- **Easy Development** - Simple API for plugin creation
 
 ## 🚀 Quick Start
 
@@ -61,83 +57,45 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Basic Usage
+### Interactive Mode (Easiest!)
+```bash
+python src/main.py interactive
+```
+
+The interactive mode will guide you through:
+1. Choosing scan type (single server or network)
+2. Entering target URL or CIDR range
+3. Selecting output format
+4. Running the scan and viewing results
+
+### Command Line Usage
 ```bash
 # Scan a single MCP server
 python src/main.py scan --target http://example.com:3000
 
-# Generate HTML report
-python src/main.py scan --target http://example.com:3000 --format html --output report.html
+# Scan with HTML report
+python src/main.py scan --target http://example.com:3000 \\
+  --format html --output report.html
 
-# Generate PDF report (NEW!)
-python src/main.py scan --target http://example.com:3000 --format pdf --output report.pdf
+# Scan with PDF report
+python src/main.py scan --target http://example.com:3000 \\
+  --format pdf --output report.pdf
 
-# Generate JSON for automation
-python src/main.py scan --target http://example.com:3000 --format json --output report.json
+# Scan with Word document
+python src/main.py scan --target http://example.com:3000 \\
+  --format docx --output report.docx
 
-# List all security checks
+# Scan entire network
+python src/main.py network-scan --cidr 192.168.1.0/24 --ports 3000,8080
+
+# List available security checks
 python src/main.py checks
 
-# Verbose output
-python src/main.py scan --target http://example.com:3000 --verbose
+# List available plugins
+python src/main.py plugins
 ```
 
-### Demo Mode
-```bash
-# Test with mock vulnerable server
-python test_scanner.py
-
-# Test PDF generation
-python test_scanner_with_pdf.py
-
-# View reports
-firefox reports/demo_scan.html
-xdg-open reports/demo_scan.pdf
-```
-
-
-## 🔒 Security & Responsible Use
-
-### ⚠️ Authorization Required
-
-**ALWAYS obtain written authorization before scanning systems you don't own.**
-
-Unauthorized scanning may violate:
-- Computer Fraud and Abuse Act (US)
-- Computer Misuse Act (UK)  
-- Similar laws in other jurisdictions
-
-### Security Features (v0.2.1+)
-
-- ✅ **SSRF Protection**: Blocks private IP scanning by default
-- ✅ **SSL Verification**: Enabled by default, protects against MITM
-- ✅ **Metadata Blocking**: Prevents cloud credential exposure
-- ✅ **Explicit Flags**: Dangerous operations require explicit consent
-
-### New Security Flags
-```bash
-# Scan with default security settings
-python src/main.py scan --target https://example.com:3000
-
-# Scan private network (requires authorization!)
-python src/main.py scan --target http://192.168.1.10:3000 --allow-private
-
-# Disable SSL verification (testing only!)
-python src/main.py scan --target https://test-server.local --insecure
-
-# Both flags for local testing
-python src/main.py scan --target http://localhost:3000 --allow-private --insecure
-```
-
-### Best Practices
-
-1. **Get Authorization**: Written permission from system owner
-2. **Scope Agreement**: Define what you're allowed to scan
-3. **Time Windows**: Scan during approved maintenance windows
-4. **Rate Limiting**: Use reasonable delays between requests
-5. **Report Responsibly**: Give time to fix before public disclosure
-
-## 📊 Example Output
+## 📋 Example Output
 
 ### Terminal
 ```
@@ -160,89 +118,96 @@ Target: http://localhost:3000
 └──────────┴───────┘
 ```
 
-### PDF Report (NEW! 📄)
-Professional security reports with:
-- **Executive Summary** with risk scoring
-- **Color-coded** severity indicators
-- **Detailed vulnerability cards** with:
-  - CWE/CVSS references
-  - Evidence from scan
-  - Step-by-step remediation
-- **Statistics dashboard**
-- **Print-friendly** formatting
+### Report Formats
 
-Perfect for:
-- 📧 Emailing to stakeholders
-- 📑 Compliance documentation
-- 🎤 Executive presentations
-- 💾 Long-term archival
+**HTML Report** - Interactive web-based report with:
+- Color-coded severity levels
+- Detailed vulnerability cards
+- Risk scoring dashboard
+- Remediation guidance
+
+**PDF Report** - Professional document with:
+- Executive summary
+- Risk assessment
+- Detailed findings
+- Recommendations
+
+**Word Report** - Editable document with:
+- Complete vulnerability details
+- Easy customization
+- Share with stakeholders
 
 ## 🔍 Security Checks
 
-### 1. Authentication & Authorization
+### Authentication & Authorization
 - Missing authentication detection
 - Weak credential testing
 - Authorization bypass checks
 - Dangerous tool exposure
 
-### 2. Encryption & Transport
+### Encryption & Transport
 - TLS/SSL validation
 - Certificate verification
 - Weak cipher detection
-- Protocol downgrade risks
 
-### 3. CORS (Cross-Origin Resource Sharing)
+### CORS (Cross-Origin Resource Sharing)
 - Wildcard origin detection
 - Origin reflection vulnerabilities
 - Credentials with wildcard
-- CORS misconfiguration
 
-### 4. Rate Limiting & DoS
+### Rate Limiting & DoS
 - Absence of rate limiting
 - Weak throttling thresholds
 - Denial-of-service protection
-- Brute-force vulnerability
 
-### 5. Injection Attacks
+### Injection Attacks
 **SQL Injection:**
 - Query parameter testing
 - Error-based detection
-- Blind SQL injection
 
 **Command Injection:**
 - Shell command execution
 - System command testing
-- Path manipulation
 
 **Path Traversal:**
 - Directory traversal testing
 - File access validation
-- Sensitive file exposure
 
-### 6. Information Disclosure
+### Information Disclosure
 - Version information leaks
 - Error message analysis
-- Internal path exposure
 
-## 🏗️ Architecture
+## 🔌 Plugin Development
+
+Create custom security checks easily:
+```python
+# plugins/my_check.py
+from src.scanner.plugins import SecurityCheckPlugin
+from src.models import Vulnerability, Severity
+
+class MyCustomCheck(SecurityCheckPlugin):
+    name = "My Custom Check"
+    version = "1.0.0"
+    description = "Custom security check"
+    author = "Your Name"
+    
+    async def check(self, server):
+        # Your check logic here
+        if some_condition:
+            return Vulnerability.create(
+                id="CUSTOM-001",
+                title="Issue Found",
+                description="Description of the issue",
+                severity=Severity.HIGH,
+                category="Custom",
+                remediation="How to fix it"
+            )
+        return None
 ```
-mpc-security-scanner/
-├── src/
-│   ├── main.py              # CLI interface
-│   ├── scanner/             # Core scanning engine
-│   │   ├── discovery.py     # Server discovery
-│   │   ├── analyzer.py      # Security analysis
-│   │   ├── reporter.py      # HTML/JSON reports
-│   │   └── pdf_reporter.py  # PDF generation (NEW!)
-│   ├── checks/              # Security checks
-│   │   ├── cors.py          # CORS checks (NEW!)
-│   │   ├── rate_limiting.py # Rate limiting (NEW!)
-│   │   └── injection.py     # Injection checks (NEW!)
-│   ├── models/              # Data models
-│   └── utils/               # Utilities
-├── tests/                   # 29+ tests
-├── docs/                    # Documentation
-└── reports/                 # Generated reports
+
+List your plugins:
+```bash
+python src/main.py plugins
 ```
 
 ## 🧪 Testing
@@ -253,31 +218,25 @@ pytest
 # Run with coverage
 pytest --cov=src --cov-report=html
 
-# Run specific test category
-pytest tests/test_checks/ -v
+# Test network scanner
+python test_network_scan.py
 
-# Test demo
-python test_scanner.py
+# Test plugin system
+python test_plugins.py
 ```
-
-**Test Coverage:**
-- ✅ 29+ tests
-- 📊 50%+ code coverage
-- 🧪 Models: 100% coverage
-- 🔍 Analyzer: 95% coverage
 
 ## 📚 Documentation
 
 - **[Usage Guide](docs/USAGE.md)** - Detailed usage examples
 - **[API Reference](docs/API.md)** - Developer documentation
 - **[Security Guide](docs/SECURITY.md)** - Security best practices
-- **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+- **[Plugin Development](NETWORK_PLUGIN_FEATURES.md)** - Create custom plugins
 
 ## 🎯 Use Cases
 
 ### For Security Teams
 - Regular security audits
-- Compliance reporting (SOC2, ISO27001)
+- Compliance reporting
 - Vulnerability assessments
 - Penetration testing
 
@@ -285,51 +244,28 @@ python test_scanner.py
 - CI/CD integration
 - Pre-deployment checks
 - Security regression testing
-- Automated scanning
 
 ### For DevOps
 - Infrastructure monitoring
 - Configuration validation
 - Security baseline enforcement
-- Incident response
 
 ## 📈 Roadmap
 
 - [x] Core scanning engine
 - [x] 10+ security checks
-- [x] HTML/JSON/PDF reports
-- [x] CORS vulnerability detection
-- [x] Rate limiting checks
-- [x] Injection attack detection
-- [x] PDF report generation
-- [x] Comprehensive test suite
-- [x] GitHub Actions CI/CD
-- [ ] Network scanning (CIDR)
+- [x] HTML/JSON/PDF/DOCX reports
+- [x] Interactive mode
+- [x] Network scanning (CIDR)
+- [x] Plugin system
+- [ ] Scheduled scanning
 - [ ] Web dashboard
 - [ ] Docker deployment
 - [ ] PyPI package
-- [ ] Plugin system
-- [ ] Scheduled scanning
-- [ ] Slack/Email notifications
 
 ## 🤝 Contributing
 
 Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-```bash
-# Setup development environment
-git clone https://github.com/Latteflo/mpc-security-scanner.git
-cd mpc-security-scanner
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Run tests
-pytest -v
-
-# Format code
-black src/ tests/
-ruff check src/ tests/
-```
 
 ## 📝 License
 
@@ -341,13 +277,6 @@ MIT License - see [LICENSE](LICENSE) file.
 - Security research community
 - OWASP and CWE projects
 
-## 🔗 Resources
-
-- [GitHub Issues](https://github.com/Latteflo/mpc-security-scanner/issues)
-- [MCP Specification](https://spec.modelcontextprotocol.io/)
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [CWE Database](https://cwe.mitre.org/)
-
 ## ⚠️ Disclaimer
 
 **For authorized security testing only.** Always obtain permission before scanning systems you don't own.
@@ -356,4 +285,4 @@ MIT License - see [LICENSE](LICENSE) file.
 
 **Made with ❤️ for the security community** | [⭐ Star this repo](https://github.com/Latteflo/mpc-security-scanner)
 
-**NEW in v0.2.1:** PDF Reports, Injection Checks, CORS Detection, Rate Limiting!
+**Latest:** Interactive Mode, Network Scanning, Plugin System, PDF/Word Reports!
