@@ -1,6 +1,5 @@
 """
-Security Analyzer Module
-Coordinates security checks and generates findings
+Enhanced Security Analyzer with Compliance Mapping
 """
 
 import asyncio
@@ -11,34 +10,34 @@ from datetime import datetime
 
 from rich.console import Console
 
-# Fix imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from models import MCPServer, Vulnerability, Severity
 from utils.logger import get_logger
 from checks.cors import check_cors_misconfiguration
 from checks.rate_limiting import check_rate_limiting
 from checks.injection import check_sql_injection, check_command_injection, check_path_traversal
+from compliance.mapper import ComplianceMapper
 
 console = Console()
 logger = get_logger("analyzer")
 
 
 class SecurityAnalyzer:
-    """Analyzes MCP servers for security vulnerabilities"""
+    """Analyzes MCP servers for security vulnerabilities with compliance mapping"""
     
-    def __init__(self, verify_ssl: bool = True):
-        self.verify_ssl = verify_ssl
+    def __init__(self):
         self.vulnerabilities: List[Vulnerability] = []
+        self.compliance_mapper = ComplianceMapper()
     
     async def scan(self, server: MCPServer) -> List[Vulnerability]:
         """
-        Perform security analysis on an MCP server
+        Perform security analysis on an MCP server with compliance mapping
         
         Args:
             server: MCPServer to analyze
             
         Returns:
-            List of vulnerabilities found
+            List of vulnerabilities found with compliance mappings
         """
         logger.info(f"Starting security analysis of {server.url}")
         
@@ -53,25 +52,37 @@ class SecurityAnalyzer:
         await self._check_rate_limiting(server)
         await self._check_injection_attacks(server)
         
+        # Add compliance mappings to all vulnerabilities
+        self._add_compliance_mappings()
+        
         logger.info(f"Analysis complete: {len(self.vulnerabilities)} issues found")
         
         return self.vulnerabilities
     
+    def _add_compliance_mappings(self):
+        """Add compliance framework mappings to all vulnerabilities"""
+        for vuln in self.vulnerabilities:
+            frameworks = self.compliance_mapper.get_frameworks(vuln.id)
+            
+            for framework in frameworks:
+                controls = self.compliance_mapper.get_controls(vuln.id, framework)
+                control_dicts = [c.to_dict() for c in controls]
+                vuln.add_compliance_mapping(framework.value, control_dicts)
+        
+        logger.debug(f"Added compliance mappings to {len(self.vulnerabilities)} vulnerabilities")
+    
     async def _check_injection_attacks(self, server: MCPServer):
         """Check for injection vulnerabilities"""
-        # SQL Injection
         sql_vuln = await check_sql_injection(server)
         if sql_vuln:
             self.vulnerabilities.append(sql_vuln)
             logger.warning(f"Found: {sql_vuln.title}")
         
-        # Command Injection
         cmd_vuln = await check_command_injection(server)
         if cmd_vuln:
             self.vulnerabilities.append(cmd_vuln)
             logger.warning(f"Found: {cmd_vuln.title}")
         
-        # Path Traversal
         path_vuln = await check_path_traversal(server)
         if path_vuln:
             self.vulnerabilities.append(path_vuln)
