@@ -15,7 +15,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from scanner import PDFReportGenerator, MCPDiscovery, SecurityAnalyzer, ReportGenerator, scan_network_for_mcp
+from scanner import MCPDiscovery, SecurityAnalyzer, ReportGenerator, scan_network_for_mcp
 from models import MCPServer
 
 console = Console()

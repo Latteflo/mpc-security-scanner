@@ -298,6 +298,16 @@ def plugins():
     console.print()
 
 
+@cli.command()
+def interactive():
+    """Interactive mode - guided scanning"""
+    import subprocess
+    
+    # Run the interactive script
+    result = subprocess.run([sys.executable, "src/interactive.py"])
+    sys.exit(result.returncode)
+
+
 def main():
     """Main entry point."""
     cli()
@@ -305,13 +315,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-@cli.command()
-def interactive():
-    """Interactive wizard mode for easy scanning"""
-    import subprocess
-    import sys
-    
-    # Run the wizard script
-    subprocess.run([sys.executable, "src/interactive.py"])

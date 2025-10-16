@@ -107,7 +107,7 @@ class EnhancedPDFReportGenerator:
         
         # Body text
         self.styles.add(ParagraphStyle(
-            name='BodyText',
+            name='BodyTextEnhanced',
             parent=self.styles['Normal'],
             fontSize=10,
             textColor=colors.HexColor('#34495e'),
@@ -400,20 +400,20 @@ class EnhancedPDFReportGenerator:
         # Description
         desc = Paragraph(
             f"<b>Description:</b><br/>{vuln.description}", 
-            self.styles['BodyText']
+            self.styles['BodyTextEnhanced']
         )
         
         # Evidence
         evidence_items = "<br/>".join([f"• {e}" for e in vuln.evidence[:5]])
         evidence = Paragraph(
             f"<b>Evidence:</b><br/>{evidence_items}", 
-            self.styles['BodyText']
+            self.styles['BodyTextEnhanced']
         )
         
         # Remediation
         remediation = Paragraph(
             f"<b>Remediation:</b><br/>{vuln.remediation.replace(chr(10), '<br/>')}", 
-            self.styles['BodyText']
+            self.styles['BodyTextEnhanced']
         )
         
         # Combine into bordered card
@@ -461,7 +461,7 @@ class EnhancedPDFReportGenerator:
         • Provide security training to development team<br/>
         """
         
-        reco = Paragraph(reco_text, self.styles['BodyText'])
+        reco = Paragraph(reco_text, self.styles['BodyTextEnhanced'])
         elements.append(reco)
         
         return elements
@@ -485,7 +485,7 @@ class EnhancedPDFReportGenerator:
         <i>This document contains confidential information. Unauthorized distribution is prohibited.</i>
         """
         
-        footer = Paragraph(footer_text, self.styles['BodyText'])
+        footer = Paragraph(footer_text, self.styles['BodyTextEnhanced'])
         elements.append(footer)
         
         return elements
