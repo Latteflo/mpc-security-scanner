@@ -241,6 +241,63 @@ def checks():
     console.print()
 
 
+
+@cli.command()
+@click.option("--cidr", "-c", required=True, help="CIDR range to scan")
+@click.option("--ports", "-p", default="3000,8000,8080", help="Comma-separated ports")
+def network_scan(cidr: str, ports: str):
+    """Scan network range for MCP servers"""
+    async def run_scan():
+        from scanner import scan_network_for_mcp
+        
+        console.print(f"\n[bold cyan]🔍 Network Scan: {cidr}[/bold cyan]\n")
+        port_list = [int(p.strip()) for p in ports.split(",")]
+        
+        try:
+            servers = await scan_network_for_mcp(cidr, port_list)
+            console.print(f"\n[green]✓ Found {len(servers)} MCP servers[/green]\n")
+            
+            for server in servers:
+                console.print(f"  • {server.url}")
+                if server.name:
+                    console.print(f"    Name: {server.name}")
+                console.print(f"    Tools: {len(server.tools)}")
+                console.print()
+        except Exception as e:
+            console.print(f"\n[bold red]❌ Error:[/bold red] {str(e)}")
+            sys.exit(1)
+    
+    asyncio.run(run_scan())
+
+
+@cli.command()
+def plugins():
+    """List available plugins"""
+    from scanner import PluginManager
+    from rich.table import Table
+    
+    console.print("\n[bold cyan]🔌 Available Plugins[/bold cyan]\n")
+    
+    manager = PluginManager()
+    manager.load_plugins()
+    
+    if not manager.plugins:
+        console.print("[yellow]No plugins found in plugins/ directory[/yellow]\n")
+        return
+    
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Plugin", style="cyan")
+    table.add_column("Version")
+    table.add_column("Status")
+    
+    for p in manager.list_plugins():
+        status = "[green]✓[/green]" if p['enabled'] else "[dim]✗[/dim]"
+        table.add_row(p['name'], p['version'], status)
+    
+    console.print(table)
+    console.print()
+
+
 def main():
     """Main entry point."""
     cli()
