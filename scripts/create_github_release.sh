@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+echo "=========================================="
+echo "  GitHub Release Creation Guide"
+echo "=========================================="
+echo ""
+
+echo "To create a GitHub Release for v0.2.0, follow these steps:"
+echo ""
+echo "1. Go to: https://github.com/Latteflo/mpc-security-scanner/releases/new"
+echo ""
+echo "2. Tag: v0.2.0"
+echo ""
+echo "3. Title: Version 0.2.0 - Compliance Framework Support"
+echo ""
+echo "4. Description: Copy from docs/RELEASE_v0.2.0.md"
+echo ""
+echo "5. Check 'Set as the latest release'"
+echo ""
+echo "6. Click 'Publish release'"
+echo ""
+echo "Or use GitHub CLI:"
+echo ""
+echo "gh release create v0.2.0 \\"
+echo "  --title 'Version 0.2.0 - Compliance Framework Support' \\"
+echo "  --notes-file docs/RELEASE_v0.2.0.md"
+echo ""
+
