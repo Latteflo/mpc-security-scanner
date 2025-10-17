@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP Security Scan Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 3px solid #4CAF50; padding-bottom: 10px; }
+        h2 { color: #555; margin-top: 30px; }
+        .summary { background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat { background: white; padding: 15px; border-radius: 5px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 32px; font-weight: bold; margin: 5px 0; }
+        .vulnerability { margin: 20px 0; padding: 20px; border-left: 5px solid; border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .critical { border-color: #d32f2f; background: #ffebee; }
+        .high { border-color: #f57c00; background: #fff3e0; }
+        .medium { border-color: #fbc02d; background: #fffde7; }
+        .low { border-color: #1976d2; background: #e3f2fd; }
+        .info { border-color: #388e3c; background: #e8f5e9; }
+        .severity-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; color: white; font-weight: bold; font-size: 12px; }
+        .critical-badge { background: #d32f2f; }
+        .high-badge { background: #f57c00; }
+        .medium-badge { background: #fbc02d; color: #333; }
+        .low-badge { background: #1976d2; }
+        .info-badge { background: #388e3c; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .risk-score { font-size: 48px; font-weight: bold; text-align: center; padding: 20px; }
+        .risk-high { color: #d32f2f; }
+        .risk-medium { color: #f57c00; }
+        .risk-low { color: #388e3c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 MCP Security Scan Report</h1>
+        
+        <div class="summary">
+            <h2>Executive Summary</h2>
+            <p><strong>Target:</strong> http://test.example.com:3000</p>
+            <p><strong>Server Name:</strong> Test Server</p>
+            <p><strong>Scan ID:</strong> scan-20251016-212751</p>
+            <p><strong>Date:</strong> 2025-10-16 21:27:51.922348</p>
+            <p><strong>Duration:</strong> 0.00s</p>
+            
+            <div class="risk-score risk-low">
+                Risk Score: 33/100
+            </div>
+        </div>
+        
+        <h2>Statistics</h2>
+        <div class="stats">
+            <div class="stat">
+                <div>Total Checks</div>
+                <div class="stat-value">5</div>
+            </div>
+            <div class="stat">
+                <div>Vulnerabilities</div>
+                <div class="stat-value" style="color: #d32f2f;">7</div>
+            </div>
+            <div class="stat">
+                <div>Critical</div>
+                <div class="stat-value" style="color: #d32f2f;">2</div>
+            </div>
+            <div class="stat">
+                <div>High</div>
+                <div class="stat-value" style="color: #f57c00;">2</div>
+            </div>
+            <div class="stat">
+                <div>Medium</div>
+                <div class="stat-value" style="color: #fbc02d;">1</div>
+            </div>
+            <div class="stat">
+                <div>Low</div>
+                <div class="stat-value" style="color: #1976d2;">1</div>
+            </div>
+        </div>
+        
+        <h2>Vulnerabilities</h2>
+
+        <div class="vulnerability critical">
+            <h3>
+                <span class="severity-badge critical-badge">CRITICAL</span>
+                Missing Authentication
+            </h3>
+            <p><strong>ID:</strong> MCP-AUTH-001 | <strong>Category:</strong> Authentication</p>
+            <p>The MCP server at http://test.example.com:3000 does not require authentication. Any client can connect and access all available tools and resources.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Implement authentication mechanism such as:
+- API keys
+- OAuth 2.0
+- Mutual TLS (mTLS)
+- JWT tokens</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Server URL: http://test.example.com:3000</li>
+                <li>Successfully connected without credentials</li>
+                <li>Available tools: 2</li>
+                <li>Available resources: 1</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability high">
+            <h3>
+                <span class="severity-badge high-badge">HIGH</span>
+                Unencrypted Connection
+            </h3>
+            <p><strong>ID:</strong> MCP-CRYPTO-001 | <strong>Category:</strong> Encryption</p>
+            <p>The MCP server at http://test.example.com:3000 does not use TLS/SSL encryption. All communication is transmitted in plaintext, allowing attackers to intercept sensitive data including credentials and API responses.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Enable TLS/SSL encryption:
+- Use HTTPS instead of HTTP
+- Install valid SSL certificate
+- Configure TLS 1.2 or higher
+- Disable weak cipher suites</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Server URL: http://test.example.com:3000</li>
+                <li>Protocol: HTTP (unencrypted)</li>
+                <li>Traffic can be intercepted</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability critical">
+            <h3>
+                <span class="severity-badge critical-badge">CRITICAL</span>
+                Dangerous Tools Exposed Without Authorization
+            </h3>
+            <p><strong>ID:</strong> MCP-AUTHZ-001 | <strong>Category:</strong> Authorization</p>
+            <p>The MCP server exposes 2 potentially dangerous tools without proper authorization controls. Combined with missing authentication, these tools can be abused for system compromise.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Implement proper authorization:
+- Role-based access control (RBAC)
+- Principle of least privilege
+- Input validation for all tools
+- Audit logging for tool usage</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Dangerous tools found: read_file, execute</li>
+                <li>Total tools exposed: 2</li>
+                <li>Authentication required: False</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability low">
+            <h3>
+                <span class="severity-badge low-badge">LOW</span>
+                Default Port Configuration
+            </h3>
+            <p><strong>ID:</strong> MCP-CONFIG-001 | <strong>Category:</strong> Configuration</p>
+            <p>The MCP server is running on a default port (3000). This makes it easier for attackers to discover and target the server.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Change to a non-standard port:
+- Use a random high port (>10000)
+- Update firewall rules accordingly
+- Document the port change</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Current port: 3000</li>
+                <li>Default port detected</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability info">
+            <h3>
+                <span class="severity-badge info-badge">INFO</span>
+                Version Information Disclosure
+            </h3>
+            <p><strong>ID:</strong> MCP-INFO-001 | <strong>Category:</strong> Information Disclosure</p>
+            <p>The server discloses its version (1.0.0), which can help attackers identify known vulnerabilities in that specific version.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Minimize information disclosure:
+- Remove or obfuscate version headers
+- Use generic error messages
+- Keep software updated regardless</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Disclosed version: 1.0.0</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability high">
+            <h3>
+                <span class="severity-badge high-badge">HIGH</span>
+                Command Execution Tools Exposed
+            </h3>
+            <p><strong>ID:</strong> MCP-INJ-004 | <strong>Category:</strong> Injection</p>
+            <p>The MCP server at http://test.example.com:3000 exposes command execution tools (execute). These are high-risk tools that could allow command injection if not properly secured.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Secure command execution tools:
+- Implement strict input validation
+- Use allowlists for permitted commands
+- Never execute shell commands with user input
+- Consider removing or restricting these tools
+- Require authentication and authorization
+- Log all command execution attempts</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>Command execution tools: execute</li>
+                <li>High-risk functionality exposed</li>
+                <li>Potential for system compromise</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability medium">
+            <h3>
+                <span class="severity-badge medium-badge">MEDIUM</span>
+                File Access Tools With Potential Path Traversal Risk
+            </h3>
+            <p><strong>ID:</strong> MCP-INJ-006 | <strong>Category:</strong> Injection</p>
+            <p>The MCP server at http://test.example.com:3000 exposes file access tools (read_file) that may be vulnerable to path traversal if input validation is insufficient.</p>
+            <p><strong>Remediation:</strong></p>
+            <pre>Secure file access tools:
+- Implement strict path validation
+- Use allowlists for permitted directories
+- Canonicalize paths before access
+- Never trust user-supplied file paths
+- Restrict file system access scope</pre>
+            <p><strong>Evidence:</strong></p>
+            <ul>
+                <li>File access tools: read_file</li>
+                <li>Potential path traversal risk</li>
+                <li>Input validation status unknown</li>
+            </ul>
+        </div>
+
+    </div>
+</body>
+</html>

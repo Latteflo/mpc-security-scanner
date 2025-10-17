@@ -1,0 +1,156 @@
+{
+  "scan_id": "scan-20251016-212751",
+  "started_at": "2025-10-16 21:27:51.919063",
+  "completed_at": "2025-10-16 21:27:51.919089",
+  "duration_seconds": 2.6e-05,
+  "target": {
+    "host": "test.example.com",
+    "port": 3000,
+    "protocol": "http",
+    "name": "Test Server",
+    "version": "1.0.0",
+    "description": null,
+    "tools": [
+      "read_file",
+      "execute"
+    ],
+    "resources": [
+      "file:///etc/passwd"
+    ],
+    "has_authentication": false,
+    "has_encryption": false,
+    "discovered_at": "2025-10-16 21:27:51.847783",
+    "last_scanned": null,
+    "metadata": {}
+  },
+  "vulnerabilities": [
+    {
+      "id": "MCP-AUTH-001",
+      "title": "Missing Authentication",
+      "description": "The MCP server at http://test.example.com:3000 does not require authentication. Any client can connect and access all available tools and resources.",
+      "severity": "CRITICAL",
+      "category": "Authentication",
+      "cwe_id": "CWE-306",
+      "cvss_score": 9.8,
+      "evidence": [
+        "Server URL: http://test.example.com:3000",
+        "Successfully connected without credentials",
+        "Available tools: 2",
+        "Available resources: 1"
+      ],
+      "affected_component": "MCP Server Authentication",
+      "remediation": "Implement authentication mechanism such as:\n- API keys\n- OAuth 2.0\n- Mutual TLS (mTLS)\n- JWT tokens",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.851582"
+    },
+    {
+      "id": "MCP-CRYPTO-001",
+      "title": "Unencrypted Connection",
+      "description": "The MCP server at http://test.example.com:3000 does not use TLS/SSL encryption. All communication is transmitted in plaintext, allowing attackers to intercept sensitive data including credentials and API responses.",
+      "severity": "HIGH",
+      "category": "Encryption",
+      "cwe_id": "CWE-319",
+      "cvss_score": 7.5,
+      "evidence": [
+        "Server URL: http://test.example.com:3000",
+        "Protocol: HTTP (unencrypted)",
+        "Traffic can be intercepted"
+      ],
+      "affected_component": "Transport Layer",
+      "remediation": "Enable TLS/SSL encryption:\n- Use HTTPS instead of HTTP\n- Install valid SSL certificate\n- Configure TLS 1.2 or higher\n- Disable weak cipher suites",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.852715"
+    },
+    {
+      "id": "MCP-AUTHZ-001",
+      "title": "Dangerous Tools Exposed Without Authorization",
+      "description": "The MCP server exposes 2 potentially dangerous tools without proper authorization controls. Combined with missing authentication, these tools can be abused for system compromise.",
+      "severity": "CRITICAL",
+      "category": "Authorization",
+      "cwe_id": "CWE-285",
+      "cvss_score": 9.1,
+      "evidence": [
+        "Dangerous tools found: read_file, execute",
+        "Total tools exposed: 2",
+        "Authentication required: False"
+      ],
+      "affected_component": "Tool Access Control",
+      "remediation": "Implement proper authorization:\n- Role-based access control (RBAC)\n- Principle of least privilege\n- Input validation for all tools\n- Audit logging for tool usage",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.853696"
+    },
+    {
+      "id": "MCP-CONFIG-001",
+      "title": "Default Port Configuration",
+      "description": "The MCP server is running on a default port (3000). This makes it easier for attackers to discover and target the server.",
+      "severity": "LOW",
+      "category": "Configuration",
+      "cwe_id": null,
+      "cvss_score": null,
+      "evidence": [
+        "Current port: 3000",
+        "Default port detected"
+      ],
+      "affected_component": "Server Configuration",
+      "remediation": "Change to a non-standard port:\n- Use a random high port (>10000)\n- Update firewall rules accordingly\n- Document the port change",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.854657"
+    },
+    {
+      "id": "MCP-INFO-001",
+      "title": "Version Information Disclosure",
+      "description": "The server discloses its version (1.0.0), which can help attackers identify known vulnerabilities in that specific version.",
+      "severity": "INFO",
+      "category": "Information Disclosure",
+      "cwe_id": null,
+      "cvss_score": null,
+      "evidence": [
+        "Disclosed version: 1.0.0"
+      ],
+      "affected_component": "Server Headers",
+      "remediation": "Minimize information disclosure:\n- Remove or obfuscate version headers\n- Use generic error messages\n- Keep software updated regardless",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.855584"
+    },
+    {
+      "id": "MCP-INJ-004",
+      "title": "Command Execution Tools Exposed",
+      "description": "The MCP server at http://test.example.com:3000 exposes command execution tools (execute). These are high-risk tools that could allow command injection if not properly secured.",
+      "severity": "HIGH",
+      "category": "Injection",
+      "cwe_id": "CWE-78",
+      "cvss_score": 8.1,
+      "evidence": [
+        "Command execution tools: execute",
+        "High-risk functionality exposed",
+        "Potential for system compromise"
+      ],
+      "affected_component": "Command Execution Tools",
+      "remediation": "Secure command execution tools:\n- Implement strict input validation\n- Use allowlists for permitted commands\n- Never execute shell commands with user input\n- Consider removing or restricting these tools\n- Require authentication and authorization\n- Log all command execution attempts",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.908792"
+    },
+    {
+      "id": "MCP-INJ-006",
+      "title": "File Access Tools With Potential Path Traversal Risk",
+      "description": "The MCP server at http://test.example.com:3000 exposes file access tools (read_file) that may be vulnerable to path traversal if input validation is insufficient.",
+      "severity": "MEDIUM",
+      "category": "Injection",
+      "cwe_id": "CWE-22",
+      "cvss_score": null,
+      "evidence": [
+        "File access tools: read_file",
+        "Potential path traversal risk",
+        "Input validation status unknown"
+      ],
+      "affected_component": "File Access Tools",
+      "remediation": "Secure file access tools:\n- Implement strict path validation\n- Use allowlists for permitted directories\n- Canonicalize paths before access\n- Never trust user-supplied file paths\n- Restrict file system access scope",
+      "references": [],
+      "discovered_at": "2025-10-16 21:27:51.914997"
+    }
+  ],
+  "total_checks": 5,
+  "passed_checks": -2,
+  "failed_checks": 7,
+  "metadata": {}
+}

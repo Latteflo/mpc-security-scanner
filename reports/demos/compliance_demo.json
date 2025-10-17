@@ -1,0 +1,1301 @@
+{
+  "report_type": "compliance_assessment",
+  "generated_at": "2025-10-16T21:45:24.464828",
+  "server": {
+    "host": "localhost",
+    "port": 3000,
+    "protocol": "http",
+    "name": "Test Vulnerable Server",
+    "version": "1.0.0",
+    "description": null,
+    "tools": [
+      "read_file",
+      "execute_command",
+      "get_credentials",
+      "sql_query"
+    ],
+    "resources": [
+      "file:///etc/passwd",
+      "file:///var/log"
+    ],
+    "has_authentication": false,
+    "has_encryption": false,
+    "discovered_at": "2025-10-16 21:45:24.381649",
+    "last_scanned": null,
+    "metadata": {}
+  },
+  "vulnerabilities": [
+    {
+      "id": "MCP-AUTH-001",
+      "title": "Missing Authentication",
+      "description": "The MCP server at http://localhost:3000 does not require authentication. Any client can connect and access all available tools and resources.",
+      "severity": "CRITICAL",
+      "category": "Authentication",
+      "cwe_id": "CWE-306",
+      "cvss_score": 9.8,
+      "evidence": [
+        "Server URL: http://localhost:3000",
+        "Successfully connected without credentials",
+        "Available tools: 4",
+        "Available resources: 2"
+      ],
+      "affected_component": "MCP Server Authentication",
+      "remediation": "Implement authentication mechanism such as:\n- API keys\n- OAuth 2.0\n- Mutual TLS (mTLS)\n- JWT tokens",
+      "references": [],
+      "compliance_frameworks": [
+        "MITRE_ATTCK",
+        "NIST_CSF",
+        "PCI_DSS",
+        "NIST_800_53",
+        "ISO27001",
+        "SOC2"
+      ],
+      "compliance_controls": {
+        "MITRE_ATTCK": [
+          {
+            "id": "T1078",
+            "name": "Valid Accounts",
+            "description": "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access, Persistence, Privilege Escalation, or Defense Evasion",
+            "framework": "MITRE_ATTCK",
+            "category": "Initial Access, Persistence, Privilege Escalation, Defense Evasion"
+          }
+        ],
+        "NIST_CSF": [
+          {
+            "id": "PR.AC-1",
+            "name": "Identities and Credentials Management",
+            "description": "Identities and credentials are issued, managed, verified, revoked, and audited for authorized devices, users and processes",
+            "framework": "NIST_CSF",
+            "category": "Protect - Access Control"
+          },
+          {
+            "id": "PR.AC-7",
+            "name": "Users, Devices, and Assets Authentication",
+            "description": "Users, devices, and other assets are authenticated commensurate with the risk of the transaction",
+            "framework": "NIST_CSF",
+            "category": "Protect - Access Control"
+          }
+        ],
+        "PCI_DSS": [
+          {
+            "id": "8.2",
+            "name": "User Authentication and Password Management",
+            "description": "Assign a unique ID to each person with computer access",
+            "framework": "PCI_DSS",
+            "category": "Requirement 8 - Identify and authenticate access"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "IA-2",
+            "name": "Identification and Authentication (Organizational Users)",
+            "description": "Uniquely identify and authenticate organizational users and associate that unique identification with processes",
+            "framework": "NIST_800_53",
+            "category": "Identification and Authentication"
+          },
+          {
+            "id": "AC-2",
+            "name": "Account Management",
+            "description": "Manage system accounts, including establishing, activating, modifying, reviewing, disabling, and removing accounts",
+            "framework": "NIST_800_53",
+            "category": "Access Control"
+          }
+        ],
+        "ISO27001": [
+          {
+            "id": "A.9.2.1",
+            "name": "User Registration and De-registration",
+            "description": "A formal user registration and de-registration process shall be implemented to enable assignment of access rights",
+            "framework": "ISO27001",
+            "category": "Access Control"
+          },
+          {
+            "id": "A.9.4.2",
+            "name": "Secure Log-on Procedures",
+            "description": "Where required by the access control policy, access to systems and applications shall be controlled by a secure log-on procedure",
+            "framework": "ISO27001",
+            "category": "Access Control"
+          }
+        ],
+        "SOC2": [
+          {
+            "id": "CC6.1",
+            "name": "Logical and Physical Access Controls",
+            "description": "The entity implements logical access security software, infrastructure, and architectures",
+            "framework": "SOC2",
+            "category": "Common Criteria - Logical and Physical Access Controls"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.385957"
+    },
+    {
+      "id": "MCP-CRYPTO-001",
+      "title": "Unencrypted Connection",
+      "description": "The MCP server at http://localhost:3000 does not use TLS/SSL encryption. All communication is transmitted in plaintext, allowing attackers to intercept sensitive data including credentials and API responses.",
+      "severity": "HIGH",
+      "category": "Encryption",
+      "cwe_id": "CWE-319",
+      "cvss_score": 7.5,
+      "evidence": [
+        "Server URL: http://localhost:3000",
+        "Protocol: HTTP (unencrypted)",
+        "Traffic can be intercepted"
+      ],
+      "affected_component": "Transport Layer",
+      "remediation": "Enable TLS/SSL encryption:\n- Use HTTPS instead of HTTP\n- Install valid SSL certificate\n- Configure TLS 1.2 or higher\n- Disable weak cipher suites",
+      "references": [],
+      "compliance_frameworks": [
+        "MITRE_ATTCK",
+        "NIST_CSF",
+        "PCI_DSS",
+        "NIST_800_53",
+        "ISO27001",
+        "SOC2"
+      ],
+      "compliance_controls": {
+        "MITRE_ATTCK": [
+          {
+            "id": "T1040",
+            "name": "Network Sniffing",
+            "description": "Adversaries may sniff network traffic to capture information about an environment",
+            "framework": "MITRE_ATTCK",
+            "category": "Credential Access, Discovery"
+          },
+          {
+            "id": "T1557",
+            "name": "Adversary-in-the-Middle",
+            "description": "Adversaries may attempt to position themselves between two or more networked devices",
+            "framework": "MITRE_ATTCK",
+            "category": "Credential Access, Collection"
+          }
+        ],
+        "NIST_CSF": [
+          {
+            "id": "PR.DS-2",
+            "name": "Data-in-transit Protection",
+            "description": "Data-in-transit is protected",
+            "framework": "NIST_CSF",
+            "category": "Protect - Data Security"
+          }
+        ],
+        "PCI_DSS": [
+          {
+            "id": "4.1",
+            "name": "Use Strong Cryptography for Cardholder Data Transmission",
+            "description": "Use strong cryptography and security protocols to safeguard sensitive cardholder data during transmission",
+            "framework": "PCI_DSS",
+            "category": "Requirement 4 - Encrypt transmission of cardholder data"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "SC-8",
+            "name": "Transmission Confidentiality and Integrity",
+            "description": "Protect the confidentiality and integrity of transmitted information",
+            "framework": "NIST_800_53",
+            "category": "System and Communications Protection"
+          },
+          {
+            "id": "SC-13",
+            "name": "Cryptographic Protection",
+            "description": "Implement required cryptographic protections using cryptographic modules",
+            "framework": "NIST_800_53",
+            "category": "System and Communications Protection"
+          }
+        ],
+        "ISO27001": [
+          {
+            "id": "A.10.1.1",
+            "name": "Policy on the Use of Cryptographic Controls",
+            "description": "A policy on the use of cryptographic controls for protection of information shall be developed and implemented",
+            "framework": "ISO27001",
+            "category": "Cryptography"
+          },
+          {
+            "id": "A.13.1.1",
+            "name": "Network Controls",
+            "description": "Networks shall be managed and controlled to protect information in systems and applications",
+            "framework": "ISO27001",
+            "category": "Communications Security"
+          },
+          {
+            "id": "A.13.2.1",
+            "name": "Information Transfer Policies and Procedures",
+            "description": "Formal transfer policies, procedures and controls shall be in place to protect the transfer of information",
+            "framework": "ISO27001",
+            "category": "Communications Security"
+          }
+        ],
+        "SOC2": [
+          {
+            "id": "CC6.6",
+            "name": "Transmission of Data",
+            "description": "The entity implements logical access security measures to protect against threats from sources outside its system boundaries",
+            "framework": "SOC2",
+            "category": "Common Criteria - Logical and Physical Access Controls"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.387122"
+    },
+    {
+      "id": "MCP-AUTHZ-001",
+      "title": "Dangerous Tools Exposed Without Authorization",
+      "description": "The MCP server exposes 3 potentially dangerous tools without proper authorization controls. Combined with missing authentication, these tools can be abused for system compromise.",
+      "severity": "CRITICAL",
+      "category": "Authorization",
+      "cwe_id": "CWE-285",
+      "cvss_score": 9.1,
+      "evidence": [
+        "Dangerous tools found: read_file, execute_command, sql_query",
+        "Total tools exposed: 4",
+        "Authentication required: False"
+      ],
+      "affected_component": "Tool Access Control",
+      "remediation": "Implement proper authorization:\n- Role-based access control (RBAC)\n- Principle of least privilege\n- Input validation for all tools\n- Audit logging for tool usage",
+      "references": [],
+      "compliance_frameworks": [
+        "ISO27001",
+        "NIST_800_53",
+        "SOC2"
+      ],
+      "compliance_controls": {
+        "ISO27001": [
+          {
+            "id": "A.9.4.1",
+            "name": "Information Access Restriction",
+            "description": "Access to information and application system functions shall be restricted in accordance with the access control policy",
+            "framework": "ISO27001",
+            "category": "Access Control"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "AC-3",
+            "name": "Access Enforcement",
+            "description": "Enforce approved authorizations for logical access to information and system resources",
+            "framework": "NIST_800_53",
+            "category": "Access Control"
+          },
+          {
+            "id": "AC-6",
+            "name": "Least Privilege",
+            "description": "Employ the principle of least privilege, allowing only authorized accesses for users",
+            "framework": "NIST_800_53",
+            "category": "Access Control"
+          }
+        ],
+        "SOC2": [
+          {
+            "id": "CC6.1",
+            "name": "Logical and Physical Access Controls",
+            "description": "The entity implements logical access security software, infrastructure, and architectures",
+            "framework": "SOC2",
+            "category": "Common Criteria - Logical and Physical Access Controls"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.388081"
+    },
+    {
+      "id": "MCP-CONFIG-001",
+      "title": "Default Port Configuration",
+      "description": "The MCP server is running on a default port (3000). This makes it easier for attackers to discover and target the server.",
+      "severity": "LOW",
+      "category": "Configuration",
+      "cwe_id": null,
+      "cvss_score": null,
+      "evidence": [
+        "Current port: 3000",
+        "Default port detected"
+      ],
+      "affected_component": "Server Configuration",
+      "remediation": "Change to a non-standard port:\n- Use a random high port (>10000)\n- Update firewall rules accordingly\n- Document the port change",
+      "references": [],
+      "compliance_frameworks": [
+        "ISO27001",
+        "NIST_800_53",
+        "NIST_CSF"
+      ],
+      "compliance_controls": {
+        "ISO27001": [
+          {
+            "id": "A.13.1.1",
+            "name": "Network Controls",
+            "description": "Networks shall be managed and controlled to protect information in systems and applications",
+            "framework": "ISO27001",
+            "category": "Communications Security"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "CM-7",
+            "name": "Least Functionality",
+            "description": "Configure systems to provide only essential capabilities",
+            "framework": "NIST_800_53",
+            "category": "Configuration Management"
+          }
+        ],
+        "NIST_CSF": [
+          {
+            "id": "PR.IP-1",
+            "name": "Baseline Configuration",
+            "description": "A baseline configuration of information technology/industrial control systems is created and maintained",
+            "framework": "NIST_CSF",
+            "category": "Protect - Information Protection Processes"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.389055"
+    },
+    {
+      "id": "MCP-INFO-001",
+      "title": "Version Information Disclosure",
+      "description": "The server discloses its version (1.0.0), which can help attackers identify known vulnerabilities in that specific version.",
+      "severity": "INFO",
+      "category": "Information Disclosure",
+      "cwe_id": null,
+      "cvss_score": null,
+      "evidence": [
+        "Disclosed version: 1.0.0"
+      ],
+      "affected_component": "Server Headers",
+      "remediation": "Minimize information disclosure:\n- Remove or obfuscate version headers\n- Use generic error messages\n- Keep software updated regardless",
+      "references": [],
+      "compliance_frameworks": [
+        "ISO27001",
+        "NIST_800_53"
+      ],
+      "compliance_controls": {
+        "ISO27001": [
+          {
+            "id": "A.14.2.5",
+            "name": "Secure System Engineering Principles",
+            "description": "Principles for engineering secure systems shall be established, documented, maintained and applied",
+            "framework": "ISO27001",
+            "category": "System Acquisition, Development and Maintenance"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "CM-7",
+            "name": "Least Functionality",
+            "description": "Configure systems to provide only essential capabilities",
+            "framework": "NIST_800_53",
+            "category": "Configuration Management"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.390063"
+    },
+    {
+      "id": "MCP-INJ-002",
+      "title": "Potential SQL Injection Risk",
+      "description": "The MCP server at http://localhost:3000 exposes SQL-related tools (sql_query) which may be vulnerable to SQL injection if input validation is not properly implemented.",
+      "severity": "MEDIUM",
+      "category": "Injection",
+      "cwe_id": "CWE-89",
+      "cvss_score": null,
+      "evidence": [
+        "SQL-related tools found: sql_query",
+        "Tools may accept SQL queries as input",
+        "Input validation status unknown"
+      ],
+      "affected_component": "SQL Tools",
+      "remediation": "Ensure SQL injection protection:\n- Review all SQL-related tools for proper input validation\n- Use parameterized queries exclusively\n- Implement comprehensive input sanitization\n- Add security testing to your CI/CD pipeline",
+      "references": [],
+      "compliance_frameworks": [
+        "ISO27001",
+        "PCI_DSS",
+        "NIST_800_53"
+      ],
+      "compliance_controls": {
+        "ISO27001": [
+          {
+            "id": "A.14.2.1",
+            "name": "Secure Development Policy",
+            "description": "Rules for the development of software and systems shall be established and applied to developments within the organization",
+            "framework": "ISO27001",
+            "category": "System Acquisition, Development and Maintenance"
+          }
+        ],
+        "PCI_DSS": [
+          {
+            "id": "6.5.1",
+            "name": "Injection Flaws",
+            "description": "Address common coding vulnerabilities in software-development processes, particularly injection flaws",
+            "framework": "PCI_DSS",
+            "category": "Requirement 6 - Develop and maintain secure systems"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "SI-10",
+            "name": "Information Input Validation",
+            "description": "Check the validity of information inputs",
+            "framework": "NIST_800_53",
+            "category": "System and Information Integrity"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.405901"
+    },
+    {
+      "id": "MCP-INJ-004",
+      "title": "Command Execution Tools Exposed",
+      "description": "The MCP server at http://localhost:3000 exposes command execution tools (execute_command). These are high-risk tools that could allow command injection if not properly secured.",
+      "severity": "HIGH",
+      "category": "Injection",
+      "cwe_id": "CWE-78",
+      "cvss_score": 8.1,
+      "evidence": [
+        "Command execution tools: execute_command",
+        "High-risk functionality exposed",
+        "Potential for system compromise"
+      ],
+      "affected_component": "Command Execution Tools",
+      "remediation": "Secure command execution tools:\n- Implement strict input validation\n- Use allowlists for permitted commands\n- Never execute shell commands with user input\n- Consider removing or restricting these tools\n- Require authentication and authorization\n- Log all command execution attempts",
+      "references": [],
+      "compliance_frameworks": [
+        "ISO27001",
+        "NIST_800_53"
+      ],
+      "compliance_controls": {
+        "ISO27001": [
+          {
+            "id": "A.14.2.5",
+            "name": "Secure System Engineering Principles",
+            "description": "Principles for engineering secure systems shall be established, documented, maintained and applied",
+            "framework": "ISO27001",
+            "category": "System Acquisition, Development and Maintenance"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "SI-10",
+            "name": "Information Input Validation",
+            "description": "Check the validity of information inputs",
+            "framework": "NIST_800_53",
+            "category": "System and Information Integrity"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.411846"
+    },
+    {
+      "id": "MCP-INJ-006",
+      "title": "File Access Tools With Potential Path Traversal Risk",
+      "description": "The MCP server at http://localhost:3000 exposes file access tools (read_file) that may be vulnerable to path traversal if input validation is insufficient.",
+      "severity": "MEDIUM",
+      "category": "Injection",
+      "cwe_id": "CWE-22",
+      "cvss_score": null,
+      "evidence": [
+        "File access tools: read_file",
+        "Potential path traversal risk",
+        "Input validation status unknown"
+      ],
+      "affected_component": "File Access Tools",
+      "remediation": "Secure file access tools:\n- Implement strict path validation\n- Use allowlists for permitted directories\n- Canonicalize paths before access\n- Never trust user-supplied file paths\n- Restrict file system access scope",
+      "references": [],
+      "compliance_frameworks": [
+        "ISO27001",
+        "NIST_800_53"
+      ],
+      "compliance_controls": {
+        "ISO27001": [
+          {
+            "id": "A.9.4.1",
+            "name": "Information Access Restriction",
+            "description": "Access to information and application system functions shall be restricted in accordance with the access control policy",
+            "framework": "ISO27001",
+            "category": "Access Control"
+          }
+        ],
+        "NIST_800_53": [
+          {
+            "id": "AC-6",
+            "name": "Least Privilege",
+            "description": "Employ the principle of least privilege, allowing only authorized accesses for users",
+            "framework": "NIST_800_53",
+            "category": "Access Control"
+          }
+        ]
+      },
+      "discovered_at": "2025-10-16 21:45:24.420145"
+    }
+  ],
+  "compliance_summary": {
+    "ISO27001": {
+      "affected_control_count": 8,
+      "affected_controls": [
+        {
+          "id": "A.9.4.2",
+          "name": "Secure Log-on Procedures",
+          "description": "Where required by the access control policy, access to systems and applications shall be controlled by a secure log-on procedure",
+          "framework": "ISO27001",
+          "category": "Access Control"
+        },
+        {
+          "id": "A.13.2.1",
+          "name": "Information Transfer Policies and Procedures",
+          "description": "Formal transfer policies, procedures and controls shall be in place to protect the transfer of information",
+          "framework": "ISO27001",
+          "category": "Communications Security"
+        },
+        {
+          "id": "A.9.2.1",
+          "name": "User Registration and De-registration",
+          "description": "A formal user registration and de-registration process shall be implemented to enable assignment of access rights",
+          "framework": "ISO27001",
+          "category": "Access Control"
+        },
+        {
+          "id": "A.9.4.1",
+          "name": "Information Access Restriction",
+          "description": "Access to information and application system functions shall be restricted in accordance with the access control policy",
+          "framework": "ISO27001",
+          "category": "Access Control"
+        },
+        {
+          "id": "A.14.2.1",
+          "name": "Secure Development Policy",
+          "description": "Rules for the development of software and systems shall be established and applied to developments within the organization",
+          "framework": "ISO27001",
+          "category": "System Acquisition, Development and Maintenance"
+        },
+        {
+          "id": "A.14.2.5",
+          "name": "Secure System Engineering Principles",
+          "description": "Principles for engineering secure systems shall be established, documented, maintained and applied",
+          "framework": "ISO27001",
+          "category": "System Acquisition, Development and Maintenance"
+        },
+        {
+          "id": "A.10.1.1",
+          "name": "Policy on the Use of Cryptographic Controls",
+          "description": "A policy on the use of cryptographic controls for protection of information shall be developed and implemented",
+          "framework": "ISO27001",
+          "category": "Cryptography"
+        },
+        {
+          "id": "A.13.1.1",
+          "name": "Network Controls",
+          "description": "Networks shall be managed and controlled to protect information in systems and applications",
+          "framework": "ISO27001",
+          "category": "Communications Security"
+        }
+      ],
+      "critical_vulns": 2,
+      "high_vulns": 2,
+      "compliance_status": "NON_COMPLIANT"
+    },
+    "NIST_CSF": {
+      "affected_control_count": 4,
+      "affected_controls": [
+        {
+          "id": "PR.AC-7",
+          "name": "Users, Devices, and Assets Authentication",
+          "description": "Users, devices, and other assets are authenticated commensurate with the risk of the transaction",
+          "framework": "NIST_CSF",
+          "category": "Protect - Access Control"
+        },
+        {
+          "id": "PR.DS-2",
+          "name": "Data-in-transit Protection",
+          "description": "Data-in-transit is protected",
+          "framework": "NIST_CSF",
+          "category": "Protect - Data Security"
+        },
+        {
+          "id": "PR.AC-1",
+          "name": "Identities and Credentials Management",
+          "description": "Identities and credentials are issued, managed, verified, revoked, and audited for authorized devices, users and processes",
+          "framework": "NIST_CSF",
+          "category": "Protect - Access Control"
+        },
+        {
+          "id": "PR.IP-1",
+          "name": "Baseline Configuration",
+          "description": "A baseline configuration of information technology/industrial control systems is created and maintained",
+          "framework": "NIST_CSF",
+          "category": "Protect - Information Protection Processes"
+        }
+      ],
+      "critical_vulns": 2,
+      "high_vulns": 2,
+      "compliance_status": "NON_COMPLIANT"
+    },
+    "NIST_800_53": {
+      "affected_control_count": 8,
+      "affected_controls": [
+        {
+          "id": "AC-3",
+          "name": "Access Enforcement",
+          "description": "Enforce approved authorizations for logical access to information and system resources",
+          "framework": "NIST_800_53",
+          "category": "Access Control"
+        },
+        {
+          "id": "SC-13",
+          "name": "Cryptographic Protection",
+          "description": "Implement required cryptographic protections using cryptographic modules",
+          "framework": "NIST_800_53",
+          "category": "System and Communications Protection"
+        },
+        {
+          "id": "CM-7",
+          "name": "Least Functionality",
+          "description": "Configure systems to provide only essential capabilities",
+          "framework": "NIST_800_53",
+          "category": "Configuration Management"
+        },
+        {
+          "id": "AC-2",
+          "name": "Account Management",
+          "description": "Manage system accounts, including establishing, activating, modifying, reviewing, disabling, and removing accounts",
+          "framework": "NIST_800_53",
+          "category": "Access Control"
+        },
+        {
+          "id": "IA-2",
+          "name": "Identification and Authentication (Organizational Users)",
+          "description": "Uniquely identify and authenticate organizational users and associate that unique identification with processes",
+          "framework": "NIST_800_53",
+          "category": "Identification and Authentication"
+        },
+        {
+          "id": "SI-10",
+          "name": "Information Input Validation",
+          "description": "Check the validity of information inputs",
+          "framework": "NIST_800_53",
+          "category": "System and Information Integrity"
+        },
+        {
+          "id": "SC-8",
+          "name": "Transmission Confidentiality and Integrity",
+          "description": "Protect the confidentiality and integrity of transmitted information",
+          "framework": "NIST_800_53",
+          "category": "System and Communications Protection"
+        },
+        {
+          "id": "AC-6",
+          "name": "Least Privilege",
+          "description": "Employ the principle of least privilege, allowing only authorized accesses for users",
+          "framework": "NIST_800_53",
+          "category": "Access Control"
+        }
+      ],
+      "critical_vulns": 2,
+      "high_vulns": 2,
+      "compliance_status": "NON_COMPLIANT"
+    },
+    "MITRE_ATTCK": {
+      "affected_control_count": 3,
+      "affected_controls": [
+        {
+          "id": "T1078",
+          "name": "Valid Accounts",
+          "description": "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access, Persistence, Privilege Escalation, or Defense Evasion",
+          "framework": "MITRE_ATTCK",
+          "category": "Initial Access, Persistence, Privilege Escalation, Defense Evasion"
+        },
+        {
+          "id": "T1557",
+          "name": "Adversary-in-the-Middle",
+          "description": "Adversaries may attempt to position themselves between two or more networked devices",
+          "framework": "MITRE_ATTCK",
+          "category": "Credential Access, Collection"
+        },
+        {
+          "id": "T1040",
+          "name": "Network Sniffing",
+          "description": "Adversaries may sniff network traffic to capture information about an environment",
+          "framework": "MITRE_ATTCK",
+          "category": "Credential Access, Discovery"
+        }
+      ],
+      "critical_vulns": 2,
+      "high_vulns": 2,
+      "compliance_status": "NON_COMPLIANT"
+    },
+    "PCI_DSS": {
+      "affected_control_count": 3,
+      "affected_controls": [
+        {
+          "id": "8.2",
+          "name": "User Authentication and Password Management",
+          "description": "Assign a unique ID to each person with computer access",
+          "framework": "PCI_DSS",
+          "category": "Requirement 8 - Identify and authenticate access"
+        },
+        {
+          "id": "6.5.1",
+          "name": "Injection Flaws",
+          "description": "Address common coding vulnerabilities in software-development processes, particularly injection flaws",
+          "framework": "PCI_DSS",
+          "category": "Requirement 6 - Develop and maintain secure systems"
+        },
+        {
+          "id": "4.1",
+          "name": "Use Strong Cryptography for Cardholder Data Transmission",
+          "description": "Use strong cryptography and security protocols to safeguard sensitive cardholder data during transmission",
+          "framework": "PCI_DSS",
+          "category": "Requirement 4 - Encrypt transmission of cardholder data"
+        }
+      ],
+      "critical_vulns": 2,
+      "high_vulns": 2,
+      "compliance_status": "NON_COMPLIANT"
+    },
+    "SOC2": {
+      "affected_control_count": 2,
+      "affected_controls": [
+        {
+          "id": "CC6.1",
+          "name": "Logical and Physical Access Controls",
+          "description": "The entity implements logical access security software, infrastructure, and architectures",
+          "framework": "SOC2",
+          "category": "Common Criteria - Logical and Physical Access Controls"
+        },
+        {
+          "id": "CC6.6",
+          "name": "Transmission of Data",
+          "description": "The entity implements logical access security measures to protect against threats from sources outside its system boundaries",
+          "framework": "SOC2",
+          "category": "Common Criteria - Logical and Physical Access Controls"
+        }
+      ],
+      "critical_vulns": 2,
+      "high_vulns": 2,
+      "compliance_status": "NON_COMPLIANT"
+    }
+  },
+  "framework_gap_analysis": {
+    "ISO27001": {
+      "framework": "ISO27001",
+      "framework_name": "ISO/IEC 27001:2013",
+      "total_affected_controls": 8,
+      "affected_controls": [
+        {
+          "id": "A.10.1.1",
+          "name": "Policy on the Use of Cryptographic Controls",
+          "description": "A policy on the use of cryptographic controls for protection of information shall be developed and implemented",
+          "framework": "ISO27001",
+          "category": "Cryptography"
+        },
+        {
+          "id": "A.13.1.1",
+          "name": "Network Controls",
+          "description": "Networks shall be managed and controlled to protect information in systems and applications",
+          "framework": "ISO27001",
+          "category": "Communications Security"
+        },
+        {
+          "id": "A.13.2.1",
+          "name": "Information Transfer Policies and Procedures",
+          "description": "Formal transfer policies, procedures and controls shall be in place to protect the transfer of information",
+          "framework": "ISO27001",
+          "category": "Communications Security"
+        },
+        {
+          "id": "A.14.2.1",
+          "name": "Secure Development Policy",
+          "description": "Rules for the development of software and systems shall be established and applied to developments within the organization",
+          "framework": "ISO27001",
+          "category": "System Acquisition, Development and Maintenance"
+        },
+        {
+          "id": "A.14.2.5",
+          "name": "Secure System Engineering Principles",
+          "description": "Principles for engineering secure systems shall be established, documented, maintained and applied",
+          "framework": "ISO27001",
+          "category": "System Acquisition, Development and Maintenance"
+        },
+        {
+          "id": "A.9.2.1",
+          "name": "User Registration and De-registration",
+          "description": "A formal user registration and de-registration process shall be implemented to enable assignment of access rights",
+          "framework": "ISO27001",
+          "category": "Access Control"
+        },
+        {
+          "id": "A.9.4.1",
+          "name": "Information Access Restriction",
+          "description": "Access to information and application system functions shall be restricted in accordance with the access control policy",
+          "framework": "ISO27001",
+          "category": "Access Control"
+        },
+        {
+          "id": "A.9.4.2",
+          "name": "Secure Log-on Procedures",
+          "description": "Where required by the access control policy, access to systems and applications shall be controlled by a secure log-on procedure",
+          "framework": "ISO27001",
+          "category": "Access Control"
+        }
+      ],
+      "vulnerabilities_by_category": {
+        "Access Control": 4,
+        "Cryptography": 1,
+        "Communications Security": 3,
+        "System Acquisition, Development and Maintenance": 3
+      },
+      "control_to_vulnerabilities": {
+        "A.9.2.1": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "A.9.4.2": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "A.10.1.1": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "A.13.1.1": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          },
+          {
+            "id": "MCP-CONFIG-001",
+            "title": "Default Port Configuration",
+            "severity": "LOW"
+          }
+        ],
+        "A.13.2.1": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "A.9.4.1": [
+          {
+            "id": "MCP-AUTHZ-001",
+            "title": "Dangerous Tools Exposed Without Authorization",
+            "severity": "CRITICAL"
+          },
+          {
+            "id": "MCP-INJ-006",
+            "title": "File Access Tools With Potential Path Traversal Risk",
+            "severity": "MEDIUM"
+          }
+        ],
+        "A.14.2.5": [
+          {
+            "id": "MCP-INFO-001",
+            "title": "Version Information Disclosure",
+            "severity": "INFO"
+          },
+          {
+            "id": "MCP-INJ-004",
+            "title": "Command Execution Tools Exposed",
+            "severity": "HIGH"
+          }
+        ],
+        "A.14.2.1": [
+          {
+            "id": "MCP-INJ-002",
+            "title": "Potential SQL Injection Risk",
+            "severity": "MEDIUM"
+          }
+        ]
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "risk_level": "HIGH"
+    },
+    "NIST_CSF": {
+      "framework": "NIST_CSF",
+      "framework_name": "NIST Cybersecurity Framework",
+      "total_affected_controls": 4,
+      "affected_controls": [
+        {
+          "id": "PR.AC-1",
+          "name": "Identities and Credentials Management",
+          "description": "Identities and credentials are issued, managed, verified, revoked, and audited for authorized devices, users and processes",
+          "framework": "NIST_CSF",
+          "category": "Protect - Access Control"
+        },
+        {
+          "id": "PR.AC-7",
+          "name": "Users, Devices, and Assets Authentication",
+          "description": "Users, devices, and other assets are authenticated commensurate with the risk of the transaction",
+          "framework": "NIST_CSF",
+          "category": "Protect - Access Control"
+        },
+        {
+          "id": "PR.DS-2",
+          "name": "Data-in-transit Protection",
+          "description": "Data-in-transit is protected",
+          "framework": "NIST_CSF",
+          "category": "Protect - Data Security"
+        },
+        {
+          "id": "PR.IP-1",
+          "name": "Baseline Configuration",
+          "description": "A baseline configuration of information technology/industrial control systems is created and maintained",
+          "framework": "NIST_CSF",
+          "category": "Protect - Information Protection Processes"
+        }
+      ],
+      "vulnerabilities_by_category": {
+        "Protect - Access Control": 2,
+        "Protect - Data Security": 1,
+        "Protect - Information Protection Processes": 1
+      },
+      "control_to_vulnerabilities": {
+        "PR.AC-1": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "PR.AC-7": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "PR.DS-2": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "PR.IP-1": [
+          {
+            "id": "MCP-CONFIG-001",
+            "title": "Default Port Configuration",
+            "severity": "LOW"
+          }
+        ]
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "risk_level": "MEDIUM"
+    },
+    "NIST_800_53": {
+      "framework": "NIST_800_53",
+      "framework_name": "NIST SP 800-53 Rev. 5",
+      "total_affected_controls": 8,
+      "affected_controls": [
+        {
+          "id": "AC-2",
+          "name": "Account Management",
+          "description": "Manage system accounts, including establishing, activating, modifying, reviewing, disabling, and removing accounts",
+          "framework": "NIST_800_53",
+          "category": "Access Control"
+        },
+        {
+          "id": "AC-3",
+          "name": "Access Enforcement",
+          "description": "Enforce approved authorizations for logical access to information and system resources",
+          "framework": "NIST_800_53",
+          "category": "Access Control"
+        },
+        {
+          "id": "AC-6",
+          "name": "Least Privilege",
+          "description": "Employ the principle of least privilege, allowing only authorized accesses for users",
+          "framework": "NIST_800_53",
+          "category": "Access Control"
+        },
+        {
+          "id": "CM-7",
+          "name": "Least Functionality",
+          "description": "Configure systems to provide only essential capabilities",
+          "framework": "NIST_800_53",
+          "category": "Configuration Management"
+        },
+        {
+          "id": "IA-2",
+          "name": "Identification and Authentication (Organizational Users)",
+          "description": "Uniquely identify and authenticate organizational users and associate that unique identification with processes",
+          "framework": "NIST_800_53",
+          "category": "Identification and Authentication"
+        },
+        {
+          "id": "SC-13",
+          "name": "Cryptographic Protection",
+          "description": "Implement required cryptographic protections using cryptographic modules",
+          "framework": "NIST_800_53",
+          "category": "System and Communications Protection"
+        },
+        {
+          "id": "SC-8",
+          "name": "Transmission Confidentiality and Integrity",
+          "description": "Protect the confidentiality and integrity of transmitted information",
+          "framework": "NIST_800_53",
+          "category": "System and Communications Protection"
+        },
+        {
+          "id": "SI-10",
+          "name": "Information Input Validation",
+          "description": "Check the validity of information inputs",
+          "framework": "NIST_800_53",
+          "category": "System and Information Integrity"
+        }
+      ],
+      "vulnerabilities_by_category": {
+        "Identification and Authentication": 1,
+        "Access Control": 4,
+        "System and Communications Protection": 2,
+        "Configuration Management": 2,
+        "System and Information Integrity": 2
+      },
+      "control_to_vulnerabilities": {
+        "IA-2": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "AC-2": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "SC-8": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "SC-13": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "AC-3": [
+          {
+            "id": "MCP-AUTHZ-001",
+            "title": "Dangerous Tools Exposed Without Authorization",
+            "severity": "CRITICAL"
+          }
+        ],
+        "AC-6": [
+          {
+            "id": "MCP-AUTHZ-001",
+            "title": "Dangerous Tools Exposed Without Authorization",
+            "severity": "CRITICAL"
+          },
+          {
+            "id": "MCP-INJ-006",
+            "title": "File Access Tools With Potential Path Traversal Risk",
+            "severity": "MEDIUM"
+          }
+        ],
+        "CM-7": [
+          {
+            "id": "MCP-CONFIG-001",
+            "title": "Default Port Configuration",
+            "severity": "LOW"
+          },
+          {
+            "id": "MCP-INFO-001",
+            "title": "Version Information Disclosure",
+            "severity": "INFO"
+          }
+        ],
+        "SI-10": [
+          {
+            "id": "MCP-INJ-002",
+            "title": "Potential SQL Injection Risk",
+            "severity": "MEDIUM"
+          },
+          {
+            "id": "MCP-INJ-004",
+            "title": "Command Execution Tools Exposed",
+            "severity": "HIGH"
+          }
+        ]
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "risk_level": "HIGH"
+    },
+    "MITRE_ATTCK": {
+      "framework": "MITRE_ATTCK",
+      "framework_name": "MITRE ATT&CK Framework",
+      "total_affected_controls": 3,
+      "affected_controls": [
+        {
+          "id": "T1040",
+          "name": "Network Sniffing",
+          "description": "Adversaries may sniff network traffic to capture information about an environment",
+          "framework": "MITRE_ATTCK",
+          "category": "Credential Access, Discovery"
+        },
+        {
+          "id": "T1078",
+          "name": "Valid Accounts",
+          "description": "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access, Persistence, Privilege Escalation, or Defense Evasion",
+          "framework": "MITRE_ATTCK",
+          "category": "Initial Access, Persistence, Privilege Escalation, Defense Evasion"
+        },
+        {
+          "id": "T1557",
+          "name": "Adversary-in-the-Middle",
+          "description": "Adversaries may attempt to position themselves between two or more networked devices",
+          "framework": "MITRE_ATTCK",
+          "category": "Credential Access, Collection"
+        }
+      ],
+      "vulnerabilities_by_category": {
+        "Initial Access, Persistence, Privilege Escalation, Defense Evasion": 1,
+        "Credential Access, Discovery": 1,
+        "Credential Access, Collection": 1
+      },
+      "control_to_vulnerabilities": {
+        "T1078": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "T1040": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "T1557": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ]
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "risk_level": "MEDIUM"
+    },
+    "PCI_DSS": {
+      "framework": "PCI_DSS",
+      "framework_name": "PCI DSS 3.2.1",
+      "total_affected_controls": 3,
+      "affected_controls": [
+        {
+          "id": "4.1",
+          "name": "Use Strong Cryptography for Cardholder Data Transmission",
+          "description": "Use strong cryptography and security protocols to safeguard sensitive cardholder data during transmission",
+          "framework": "PCI_DSS",
+          "category": "Requirement 4 - Encrypt transmission of cardholder data"
+        },
+        {
+          "id": "6.5.1",
+          "name": "Injection Flaws",
+          "description": "Address common coding vulnerabilities in software-development processes, particularly injection flaws",
+          "framework": "PCI_DSS",
+          "category": "Requirement 6 - Develop and maintain secure systems"
+        },
+        {
+          "id": "8.2",
+          "name": "User Authentication and Password Management",
+          "description": "Assign a unique ID to each person with computer access",
+          "framework": "PCI_DSS",
+          "category": "Requirement 8 - Identify and authenticate access"
+        }
+      ],
+      "vulnerabilities_by_category": {
+        "Requirement 8 - Identify and authenticate access": 1,
+        "Requirement 4 - Encrypt transmission of cardholder data": 1,
+        "Requirement 6 - Develop and maintain secure systems": 1
+      },
+      "control_to_vulnerabilities": {
+        "8.2": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          }
+        ],
+        "4.1": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ],
+        "6.5.1": [
+          {
+            "id": "MCP-INJ-002",
+            "title": "Potential SQL Injection Risk",
+            "severity": "MEDIUM"
+          }
+        ]
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "risk_level": "MEDIUM"
+    },
+    "SOC2": {
+      "framework": "SOC2",
+      "framework_name": "SOC 2 Type II",
+      "total_affected_controls": 2,
+      "affected_controls": [
+        {
+          "id": "CC6.1",
+          "name": "Logical and Physical Access Controls",
+          "description": "The entity implements logical access security software, infrastructure, and architectures",
+          "framework": "SOC2",
+          "category": "Common Criteria - Logical and Physical Access Controls"
+        },
+        {
+          "id": "CC6.6",
+          "name": "Transmission of Data",
+          "description": "The entity implements logical access security measures to protect against threats from sources outside its system boundaries",
+          "framework": "SOC2",
+          "category": "Common Criteria - Logical and Physical Access Controls"
+        }
+      ],
+      "vulnerabilities_by_category": {
+        "Common Criteria - Logical and Physical Access Controls": 3
+      },
+      "control_to_vulnerabilities": {
+        "CC6.1": [
+          {
+            "id": "MCP-AUTH-001",
+            "title": "Missing Authentication",
+            "severity": "CRITICAL"
+          },
+          {
+            "id": "MCP-AUTHZ-001",
+            "title": "Dangerous Tools Exposed Without Authorization",
+            "severity": "CRITICAL"
+          }
+        ],
+        "CC6.6": [
+          {
+            "id": "MCP-CRYPTO-001",
+            "title": "Unencrypted Connection",
+            "severity": "HIGH"
+          }
+        ]
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "risk_level": "LOW"
+    }
+  }
+}

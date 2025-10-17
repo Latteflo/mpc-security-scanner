@@ -1,16 +1,8 @@
-# MCP Security Scanner - .gitignore
-# Comprehensive ignore patterns for Python security tool
-
-# ==================== Python ====================
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -24,141 +16,85 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# ==================== Testing / Coverage ====================
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-coverage.svg
-
-# ==================== Virtual Environments ====================
-.env
-.venv
-env/
+# Virtual Environment
+.venv/
 venv/
 ENV/
-env.bak/
-venv.bak/
-.python-version
+env/
 
-# ==================== IDEs ====================
-# VSCode
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+
+# IDEs
 .vscode/
-*.code-workspace
-
-# PyCharm / IntelliJ
 .idea/
-*.iml
-
-# Vim
 *.swp
 *.swo
 *~
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-
-# Eclipse
-.project
-.pydevproject
-.settings/
-
-# ==================== OS Files ====================
-# macOS
 .DS_Store
-._*
-.Spotlight-V100
-.Trashes
 
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
-.directory
-.Trash-*
-
-# ==================== Logs and Databases ====================
-*.log
-*.sql
-*.sqlite
-*.sqlite3
-*.db
-
-# ==================== Project Specific ====================
-# MCP Security Scanner reports (keep .gitkeep)
-reports/*.json
-reports/*.html
-reports/*.pdf
-reports/*.txt
-!reports/.gitkeep
-
-# Scan results
-scan_results/
-*.scan
-
-# Configuration with secrets
-config/secrets.yaml
-config/secrets.yml
-.env
-.env.local
-.env.*.local
-
-# ==================== Documentation ====================
-docs/_build/
-site/
-
-# ==================== Type Checking ====================
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pytype/
-
-# Cython debug
-cython_debug/
-
-# ==================== Nix ====================
+# Nix
 result
 result-*
 .direnv/
 
-# ==================== Security & Secrets ====================
-*.pem
-*.key
-*.crt
-*.cert
-.secrets/
+# Reports (keep structure, ignore generated files)
+reports/scans/*.json
+reports/scans/*.html
+reports/scans/*.pdf
+reports/scans/*.md
+reports/scans/*.docx
+reports/compliance/*.json
+reports/compliance/*.html
+reports/compliance/*.pdf
+reports/compliance/*.md
+!reports/.gitkeep
+!reports/demos/
+!reports/demos/.gitkeep
+!reports/demos/*.json
+!reports/demos/*.html
+!reports/demos/*.md
 
-# ==================== Temporary Files ====================
-*.tmp
-*.temp
+# Logs
+*.log
+logs/
+
+# Config with secrets
+config/secrets.yaml
+config/production.yaml
+.env
+.env.local
+
+# Backups
+*_backup.*
+*_old.*
 *.bak
 *.backup
 
-# Archives
-*.zip
-*.tar.gz
-*.rar
+# OS
+Thumbs.db
+.DS_Store
+
+# Compiled files
+*.pyc
+*.pyo
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node (for dashboard)
+dashboard/*/node_modules/
+dashboard/*/dist/
+dashboard/*/build/

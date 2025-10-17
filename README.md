@@ -1,281 +1,253 @@
 # 🔒 MCP Security Scanner
 
-[![Tests](https://github.com/Latteflo/mpc-security-scanner/workflows/Tests/badge.svg)](https://github.com/Latteflo/mpc-security-scanner/actions/workflows/tests.yml)
+[![Tests](https://github.com/Latteflo/mpc-security-scanner/workflows/Tests/badge.svg)](https://github.com/Latteflo/mpc-security-scanner/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/Latteflo/mpc-security-scanner/releases)
 
-A comprehensive security auditing tool for Model Context Protocol (MCP) servers. Automatically detects vulnerabilities, misconfigurations, and security weaknesses in MCP deployments.
+A comprehensive security auditing tool for Model Context Protocol (MCP) servers with **full compliance framework support**.
 
-## 🎯 Why This Tool?
+> **NEW in v0.2.0:** 🎉 Compliance Framework Support - ISO 27001, NIST CSF, NIST 800-53, MITRE ATT&CK, PCI DSS, SOC 2
 
-With over **7,000 MCP servers** currently exposed on the internet, many lack proper security controls. This scanner helps identify and remediate critical security issues before they're exploited.
+## ✨ Key Features
 
-## ✨ Features
+### 🔍 Security Scanning
+- **10+ Security Checks** - Authentication, Encryption, CORS, Rate Limiting, Injection attacks
+- **Automatic Discovery** - Probe and fingerprint MCP servers
+- **Fast & Async** - Efficient async/await architecture
+- **Multiple Report Formats** - JSON, HTML, PDF, Markdown, Terminal
 
-### 🔍 Core Scanning
-- **Single Server Scanning** - Deep security analysis of individual MCP servers
-- **Network Scanning** - CIDR range scanning to discover MCP servers
-- **10+ Security Checks** - Comprehensive vulnerability detection
-  - Authentication & Authorization
-  - Encryption (TLS/SSL)
-  - CORS Misconfigurations
-  - Rate Limiting & DoS Protection
-  - SQL Injection
-  - Command Injection
-  - Path Traversal
-  - Information Disclosure
+### 📋 Compliance Framework Support
+- **ISO/IEC 27001:2013** - Information Security Management (12+ controls)
+- **NIST Cybersecurity Framework** - Risk-based approach (5+ functions)
+- **NIST SP 800-53 Rev. 5** - Security and privacy controls (9+ controls)
+- **MITRE ATT&CK** - Adversarial tactics and techniques (8+ techniques)
+- **PCI DSS 3.2.1** - Payment card security (3+ requirements)
+- **SOC 2 Type II** - Service organization controls (3+ criteria)
 
-### 🎨 User Experience
-- **Interactive Mode** - Guided scanning wizard for easy use
-- **CLI Mode** - Full command-line interface for automation
-- **Beautiful Output** - Rich terminal output with progress bars
-
-### 📊 Reporting
-- **JSON** - Machine-readable for automation
-- **HTML** - Beautiful web-based reports
-- **PDF** - Professional documents for stakeholders
-- **DOCX** - Microsoft Word format for easy editing
-
-### 🔌 Extensibility
-- **Plugin System** - Create custom security checks
-- **Auto-loading** - Drop plugins in `plugins/` directory
-- **Easy Development** - Simple API for plugin creation
+### 🎯 Advanced Features
+- **Automatic Compliance Mapping** - Every vulnerability mapped to framework controls
+- **Gap Analysis** - Identify specific compliance gaps
+- **Remediation Priorities** - Risk-based prioritization
+- **Audit-Ready Reports** - Professional reports for auditors
+- **CI/CD Integration** - Automate compliance scanning
 
 ## 🚀 Quick Start
 
 ### Installation
 ```bash
-# Clone the repository
 git clone https://github.com/Latteflo/mpc-security-scanner.git
 cd mpc-security-scanner
-
-# Setup virtual environment
 python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Interactive Mode (Easiest!)
+### Basic Usage
 ```bash
-python src/main.py interactive
-```
-
-The interactive mode will guide you through:
-1. Choosing scan type (single server or network)
-2. Entering target URL or CIDR range
-3. Selecting output format
-4. Running the scan and viewing results
-
-### Command Line Usage
-```bash
-# Scan a single MCP server
+# Scan a server
 python src/main.py scan --target http://example.com:3000
 
-# Scan with HTML report
-python src/main.py scan --target http://example.com:3000 \\
-  --format html --output report.html
+# Run compliance assessment
+python src/main.py compliance --target http://example.com:3000
 
-# Scan with PDF report
-python src/main.py scan --target http://example.com:3000 \\
-  --format pdf --output report.pdf
+# List all frameworks
+python src/main.py frameworks
 
-# Scan with Word document
-python src/main.py scan --target http://example.com:3000 \\
-  --format docx --output report.docx
+# View specific framework
+python src/main.py frameworks --framework ISO27001
 
-# Scan entire network
-python src/main.py network-scan --cidr 192.168.1.0/24 --ports 3000,8080
-
-# List available security checks
-python src/main.py checks
-
-# List available plugins
-python src/main.py plugins
+# Generate reports
+python src/main.py scan --target http://example.com:3000 --format pdf
+python src/main.py compliance --target http://example.com:3000 --format json
 ```
 
-## 📋 Example Output
-
-### Terminal
-```
-🔍 Starting MCP Security Scan
-Target: http://localhost:3000
-
-✓ Server discovered: Test Server
-  Tools: 3 | Resources: 2
-
-✓ Analysis complete: Found 7 issues
-
-📊 Scan Results:
-┏━━━━━━━━━━┳━━━━━━━┓
-┃ Severity ┃ Count ┃
-┡━━━━━━━━━━╇━━━━━━━┩
-│ CRITICAL │   3   │
-│ HIGH     │   2   │
-│ MEDIUM   │   1   │
-│ LOW      │   1   │
-└──────────┴───────┘
-```
-
-### Report Formats
-
-**HTML Report** - Interactive web-based report with:
-- Color-coded severity levels
-- Detailed vulnerability cards
-- Risk scoring dashboard
-- Remediation guidance
-
-**PDF Report** - Professional document with:
-- Executive summary
-- Risk assessment
-- Detailed findings
-- Recommendations
-
-**Word Report** - Editable document with:
-- Complete vulnerability details
-- Easy customization
-- Share with stakeholders
-
-## 🔍 Security Checks
-
-### Authentication & Authorization
-- Missing authentication detection
-- Weak credential testing
-- Authorization bypass checks
-- Dangerous tool exposure
-
-### Encryption & Transport
-- TLS/SSL validation
-- Certificate verification
-- Weak cipher detection
-
-### CORS (Cross-Origin Resource Sharing)
-- Wildcard origin detection
-- Origin reflection vulnerabilities
-- Credentials with wildcard
-
-### Rate Limiting & DoS
-- Absence of rate limiting
-- Weak throttling thresholds
-- Denial-of-service protection
-
-### Injection Attacks
-**SQL Injection:**
-- Query parameter testing
-- Error-based detection
-
-**Command Injection:**
-- Shell command execution
-- System command testing
-
-**Path Traversal:**
-- Directory traversal testing
-- File access validation
-
-### Information Disclosure
-- Version information leaks
-- Error message analysis
-
-## 🔌 Plugin Development
-
-Create custom security checks easily:
-```python
-# plugins/my_check.py
-from src.scanner.plugins import SecurityCheckPlugin
-from src.models import Vulnerability, Severity
-
-class MyCustomCheck(SecurityCheckPlugin):
-    name = "My Custom Check"
-    version = "1.0.0"
-    description = "Custom security check"
-    author = "Your Name"
-    
-    async def check(self, server):
-        # Your check logic here
-        if some_condition:
-            return Vulnerability.create(
-                id="CUSTOM-001",
-                title="Issue Found",
-                description="Description of the issue",
-                severity=Severity.HIGH,
-                category="Custom",
-                remediation="How to fix it"
-            )
-        return None
-```
-
-List your plugins:
+### Demo Mode
 ```bash
-python src/main.py plugins
+# Run demos
+python scripts/test_scanner.py
+python scripts/test_compliance_scanner.py
+
+# View demo reports
+xdg-open reports/demos/demo_scan.html
+xdg-open reports/demos/compliance_demo.md
 ```
 
-## 🧪 Testing
-```bash
-# Run all tests
-pytest
+## 📊 Security Checks
 
-# Run with coverage
-pytest --cov=src --cov-report=html
+| Check | Severity | Frameworks |
+|-------|----------|------------|
+| **Authentication** | 🔴 CRITICAL | ISO 27001, NIST CSF, PCI DSS, SOC 2 |
+| **Encryption** | 🟠 HIGH | ISO 27001, NIST CSF, PCI DSS |
+| **CORS** | 🔴 CRITICAL | ISO 27001, NIST 800-53, MITRE |
+| **Rate Limiting** | 🟠 HIGH | ISO 27001, NIST CSF, SOC 2 |
+| **SQL Injection** | 🔴 CRITICAL | ISO 27001, NIST 800-53, PCI DSS |
+| **Command Injection** | 🔴 CRITICAL | ISO 27001, NIST 800-53, PCI DSS |
+| **Path Traversal** | 🔴 CRITICAL | ISO 27001, NIST 800-53, PCI DSS |
+| **Authorization** | 🔴 CRITICAL | ISO 27001, NIST 800-53, SOC 2 |
+| **Configuration** | 🔵 LOW | ISO 27001, NIST CSF |
+| **Info Disclosure** | 🟢 INFO | ISO 27001, NIST 800-53 |
 
-# Test network scanner
-python test_network_scan.py
-
-# Test plugin system
-python test_plugins.py
+## 🏗️ Project Structure
+```
+mcp-security-scanner/
+├── src/                     # Source code
+│   ├── compliance/          # Compliance framework support
+│   │   ├── frameworks.py    # Framework definitions (50+ controls)
+│   │   ├── mapper.py        # Vulnerability-to-control mapping
+│   │   └── reporter.py      # Compliance report generators
+│   ├── scanner/             # Core scanning engine
+│   │   ├── discovery.py     # Server discovery
+│   │   ├── analyzer.py      # Security analysis
+│   │   ├── reporter.py      # Report generation
+│   │   └── pdf_reporter.py  # PDF reports
+│   ├── checks/              # Security checks
+│   │   ├── cors.py          # CORS checks
+│   │   ├── rate_limiting.py # Rate limiting
+│   │   └── injection.py     # Injection checks
+│   ├── models/              # Data models
+│   │   ├── vulnerability.py # Vulnerability (with compliance)
+│   │   ├── server.py        # Server model
+│   │   └── report.py        # Report model
+│   ├── utils/               # Utilities
+│   │   ├── network.py       # Network utilities
+│   │   ├── logger.py        # Logging
+│   │   └── config.py        # Configuration
+│   └── main.py              # CLI interface
+├── tests/                   # Test suite (30+ tests)
+│   ├── test_compliance/     # Compliance tests
+│   ├── test_scanner/        # Scanner tests
+│   ├── test_checks/         # Security check tests
+│   ├── test_models/         # Model tests
+│   └── test_utils/          # Utility tests
+├── docs/                    # Documentation
+│   ├── COMPLIANCE.md        # Compliance guide
+│   ├── USAGE.md            # Usage guide
+│   ├── API.md              # API reference
+│   └── SECURITY.md         # Security guide
+├── scripts/                 # Scripts and demos
+│   ├── test_compliance_scanner.py
+│   ├── test_scanner.py
+│   └── verify_compliance_implementation.sh
+├── reports/                 # Generated reports
+│   ├── demos/              # Demo reports (tracked)
+│   ├── scans/              # Scan reports (gitignored)
+│   └── compliance/         # Compliance reports (gitignored)
+└── examples/               # Example servers
 ```
 
 ## 📚 Documentation
 
+- **[Compliance Guide](docs/COMPLIANCE.md)** - Framework documentation
 - **[Usage Guide](docs/USAGE.md)** - Detailed usage examples
 - **[API Reference](docs/API.md)** - Developer documentation
 - **[Security Guide](docs/SECURITY.md)** - Security best practices
-- **[Plugin Development](NETWORK_PLUGIN_FEATURES.md)** - Create custom plugins
+- **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+- **[Changelog](CHANGELOG.md)** - Version history
+
+## 🧪 Testing
+```bash
+# Run all tests
+pytest -v
+
+# Run specific test suite
+pytest tests/test_compliance/ -v
+
+# Run with coverage
+pytest --cov=src --cov-report=html
+
+# Run verification
+bash scripts/verify_compliance_implementation.sh
+```
+
+## 📈 Statistics
+
+- **Version:** 0.2.0
+- **Security Checks:** 10+
+- **Compliance Frameworks:** 6
+- **Framework Controls:** 50+
+- **Test Coverage:** 50%+
+- **Tests:** 30+
+- **Report Formats:** 4
+
+## 🔧 CI/CD Integration
+```yaml
+# .github/workflows/security.yml
+name: Security Scan
+
+on: [push, pull_request]
+
+jobs:
+  compliance-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: |
+          python src/main.py compliance \
+            --target ${{ secrets.MCP_SERVER_URL }} \
+            --format json \
+            --output compliance-report.json
+      - uses: actions/upload-artifact@v3
+        with:
+          name: compliance-report
+          path: compliance-report.json
+```
 
 ## 🎯 Use Cases
 
-### For Security Teams
-- Regular security audits
-- Compliance reporting
-- Vulnerability assessments
-- Penetration testing
+- **Security Teams** - Regular audits, compliance reporting, vulnerability assessments
+- **Development Teams** - CI/CD integration, pre-deployment checks, regression testing
+- **DevOps** - Configuration validation, security baseline enforcement
+- **Compliance & Audit** - Framework compliance checks, gap analysis, audit documentation
 
-### For Development Teams
-- CI/CD integration
-- Pre-deployment checks
-- Security regression testing
+## 🗺️ Roadmap
 
-### For DevOps
-- Infrastructure monitoring
-- Configuration validation
-- Security baseline enforcement
+### v0.3.0 (Planned)
+- [ ] GDPR and HIPAA compliance mapping
+- [ ] Custom framework definitions
+- [ ] Historical compliance tracking
+- [ ] Interactive web dashboard
+- [ ] REST API
 
-## 📈 Roadmap
-
-- [x] Core scanning engine
-- [x] 10+ security checks
-- [x] HTML/JSON/PDF/DOCX reports
-- [x] Interactive mode
-- [x] Network scanning (CIDR)
-- [x] Plugin system
-- [ ] Scheduled scanning
-- [ ] Web dashboard
-- [ ] Docker deployment
-- [ ] PyPI package
+### v0.4.0 (Future)
+- [ ] Real-time monitoring
+- [ ] Slack/Email notifications
+- [ ] Multi-server scanning
+- [ ] Plugin system
+- [ ] Advanced analytics
 
 ## 🤝 Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+```bash
+git clone https://github.com/Latteflo/mpc-security-scanner.git
+cd mpc-security-scanner
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest -v
+```
 
 ## 📝 License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT License - see [LICENSE](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- Built for the [Model Context Protocol](https://modelcontextprotocol.io/) ecosystem
-- Security research community
+- [Model Context Protocol](https://modelcontextprotocol.io/)
 - OWASP and CWE projects
+- NIST, ISO, and MITRE frameworks
+- Security research community
+
+## 🔗 Links
+
+- **Repository:** [GitHub](https://github.com/Latteflo/mpc-security-scanner)
+- **Issues:** [Issue Tracker](https://github.com/Latteflo/mpc-security-scanner/issues)
+- **Releases:** [Releases](https://github.com/Latteflo/mpc-security-scanner/releases)
 
 ## ⚠️ Disclaimer
 
@@ -283,6 +255,6 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
-**Made with ❤️ for the security community** | [⭐ Star this repo](https://github.com/Latteflo/mpc-security-scanner)
+**Made with ❤️ for the security community**
 
-**Latest:** Interactive Mode, Network Scanning, Plugin System, PDF/Word Reports!
+[⭐ Star this repo](https://github.com/Latteflo/mpc-security-scanner) • [📖 Read the docs](docs/) • [🐛 Report issues](https://github.com/Latteflo/mpc-security-scanner/issues)
