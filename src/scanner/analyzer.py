@@ -23,6 +23,9 @@ from checks.prompt_leakage import check_prompt_leakage
 from checks.headers import check_security_headers
 from checks.error_disclosure import check_error_disclosure
 from checks.debug_endpoints import check_debug_endpoints
+from checks.jwt_auth import check_jwt_auth
+from checks.capability_exposure import check_capability_exposure
+from checks.tool_dos import check_tool_dos
 from compliance.mapper import ComplianceMapper
 
 console = Console()
@@ -67,6 +70,9 @@ class SecurityAnalyzer:
         await self._check_headers(server)
         await self._check_error_disclosure(server)
         await self._check_debug_endpoints(server)
+        await self._check_jwt_auth(server)
+        await self._check_capability_exposure(server)
+        await self._check_tool_dos(server)
 
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()
@@ -125,6 +131,27 @@ class SecurityAnalyzer:
     async def _check_debug_endpoints(self, server: MCPServer):
         """Check for exposed debug, admin, and introspection endpoints."""
         vuln = await check_debug_endpoints(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_jwt_auth(self, server: MCPServer):
+        """Check for JWT authentication weaknesses (alg:none, weak secrets)."""
+        vuln = await check_jwt_auth(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_capability_exposure(self, server: MCPServer):
+        """Check for dangerous MCP capabilities advertised in initialize response."""
+        vuln = await check_capability_exposure(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_tool_dos(self, server: MCPServer):
+        """Check for unbounded tool output enabling context stuffing / resource exhaustion."""
+        vuln = await check_tool_dos(server)
         if vuln:
             self.vulnerabilities.append(vuln)
             logger.warning(f"Found: {vuln.title}")

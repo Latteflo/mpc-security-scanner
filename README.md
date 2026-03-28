@@ -11,7 +11,7 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 
 ## Features
 
-### Security Checks (19 total)
+### Security Checks (22 total)
 
 | Check | ID | Severity |
 |-------|----|----------|
@@ -34,6 +34,9 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 | **Missing security headers** | **MCP-HDR-001** | **LOW** |
 | **Verbose error disclosure** | **MCP-ERR-001** | **MEDIUM** |
 | **Debug endpoint exposure** | **MCP-DEBUG-001** | **MEDIUM/HIGH** |
+| **JWT authentication bypass** | **MCP-JWT-001** | **HIGH/CRITICAL** |
+| **Dangerous capability exposure** | **MCP-CAP-001** | **MEDIUM/HIGH** |
+| **Unbounded tool output** | **MCP-DOS-001** | **MEDIUM/HIGH** |
 
 ### Transport Support
 - HTTP/HTTPS JSON-RPC 2.0

@@ -379,6 +379,71 @@ class ComplianceMapper:
                 ],
             },
 
+            # JWT Authentication Weakness (MCP-JWT-001)
+            "MCP-JWT-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.9.4.2"],   # Secure log-on procedures
+                    ISO27001_CONTROLS["A.10.1.1"],  # Cryptographic controls policy
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.AC-1"],   # Identity and credential management
+                    NIST_CSF_CONTROLS["PR.AC-7"],   # User authentication
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["IA-2"],   # Identification and authentication
+                    NIST_800_53_CONTROLS["SC-13"],  # Cryptographic protection
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1078"],  # Valid accounts
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["8.2"],
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.1"],
+                ],
+            },
+
+            # Dangerous MCP Capabilities (MCP-CAP-001)
+            "MCP-CAP-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.9.4.1"],   # Information access restriction
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.IP-1"],   # Baseline configuration
+                    NIST_CSF_CONTROLS["PR.AC-1"],   # Identity and credential management
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["CM-7"],   # Least functionality
+                    NIST_800_53_CONTROLS["AC-3"],   # Access enforcement
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.1"],
+                ],
+            },
+
+            # Unbounded Tool Output (MCP-DOS-001)
+            "MCP-DOS-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.12.2.1"],  # Controls against malware
+                    ISO27001_CONTROLS["A.17.2.1"],  # Availability of information processing
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["DE.AE-5"],   # Incident alert thresholds
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SC-5"],   # Denial of service protection
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1499"],  # Endpoint denial of service
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC7.2"],
+                ],
+            },
+
             # Missing Security Headers (MCP-HDR-001)
             "MCP-HDR-001": {
                 ComplianceFramework.ISO27001: [
