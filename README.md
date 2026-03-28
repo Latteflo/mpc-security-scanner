@@ -61,7 +61,9 @@ Opens `http://localhost:8080` in your browser automatically. From there:
 - Enter a target URL and pick a compliance framework
 - Watch findings stream in live as each check runs
 - Expand any finding for description, remediation steps, evidence, and mapped compliance controls
+- Switch to the **Compliance** tab for a per-framework score, gap analysis, and control breakdown
 - Download the report (JSON / HTML / PDF / SARIF)
+- Fully responsive — works on mobile and tablet
 
 ```bash
 mcp-security-scanner serve --port 9090   # custom port
