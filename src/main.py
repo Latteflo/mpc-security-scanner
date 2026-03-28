@@ -493,6 +493,42 @@ def _save_baseline(vulnerabilities, target: str, output_path: str, console):
         console.print(f"[yellow]⚠ Could not save baseline: {e}[/yellow]")
 
 
+@cli.command()
+@click.option("--host", default="127.0.0.1", show_default=True, help="Bind host")
+@click.option("--port", default=8080, show_default=True, help="Bind port")
+@click.option("--no-browser", is_flag=True, default=False, help="Do not auto-open browser on start")
+def serve(host: str, port: int, no_browser: bool):
+    """Launch the web dashboard UI.
+
+    Opens a browser-based interface where any user can enter a target URL,
+    run a scan with live progress, and download reports — no CLI required.
+
+    Example:
+        mcp-security-scanner serve
+        mcp-security-scanner serve --port 9090 --no-browser
+    """
+    import threading
+    import time
+    import webbrowser
+    import uvicorn
+    from web.app import create_app
+
+    app = create_app()
+
+    url = f"http://{host}:{port}"
+    console.print(f"\n[bold cyan]MCP Security Scanner — Web Dashboard[/bold cyan]")
+    console.print(f"[green]Listening on:[/green] {url}")
+    console.print("[dim]Press Ctrl+C to stop[/dim]\n")
+
+    if not no_browser:
+        def _open_browser():
+            time.sleep(1.2)   # give uvicorn time to bind before opening
+            webbrowser.open(url)
+        threading.Thread(target=_open_browser, daemon=True).start()
+
+    uvicorn.run(app, host=host, port=port, log_level="warning")
+
+
 def main():
     """Main entry point."""
     try:

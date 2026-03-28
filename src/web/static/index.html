@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Security Scanner</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 15px; color: #1a1d2e; background: #f0f2f8; }
+
+  /* ── Layout ── */
+  .layout { display: flex; height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px; min-width: 220px; background: #1a1d2e; color: #a8b2d8;
+    display: flex; flex-direction: column; padding: 0;
+  }
+  .sidebar-brand {
+    padding: 24px 20px 20px; border-bottom: 1px solid #2d3154;
+  }
+  .sidebar-brand h1 { font-size: 14px; font-weight: 700; color: #e2e8f0; letter-spacing: .5px; text-transform: uppercase; }
+  .sidebar-brand p  { font-size: 11px; color: #64748b; margin-top: 3px; }
+  .sidebar-nav { padding: 12px 0; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; font-size: 13px; cursor: pointer;
+    color: #a8b2d8; transition: background .15s, color .15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: #252847; color: #e2e8f0; }
+  .nav-item.active { background: #252847; color: #7c83f7; border-left-color: #7c83f7; }
+  .nav-icon { width: 16px; text-align: center; font-size: 15px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid #2d3154; font-size: 11px; color: #475569; }
+
+  /* ── Main content ── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  .topbar {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 16px 32px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar h2 { font-size: 17px; font-weight: 600; color: #1a1d2e; }
+  .topbar-badge {
+    background: #ede9fe; color: #5b21b6; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .content { padding: 32px; flex: 1; }
+
+  /* ── Card ── */
+  .card {
+    background: #fff; border-radius: 10px; border: 1px solid #e2e8f0;
+    padding: 24px; margin-bottom: 20px;
+  }
+  .card h3 { font-size: 14px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 16px; }
+
+  /* ── Scan form ── */
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+  .form-group input, .form-group select {
+    border: 1.5px solid #e2e8f0; border-radius: 7px; padding: 9px 12px;
+    font-size: 14px; color: #1a1d2e; background: #fff;
+    transition: border-color .15s;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #7c83f7; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 7px; font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; transition: background .15s, opacity .15s;
+  }
+  .btn-primary { background: #7c83f7; color: #fff; }
+  .btn-primary:hover { background: #6366f1; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary { background: #f1f5f9; color: #475569; }
+  .btn-secondary:hover { background: #e2e8f0; }
+  .btn-success { background: #059669; color: #fff; }
+  .btn-success:hover { background: #047857; }
+
+  /* ── Progress section ── */
+  .phase-bar { display: flex; align-items: center; gap: 0; margin-bottom: 24px; }
+  .phase-step {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .phase-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #e2e8f0; color: #94a3b8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; transition: background .3s, color .3s;
+  }
+  .phase-dot.active { background: #7c83f7; color: #fff; }
+  .phase-dot.done   { background: #059669; color: #fff; }
+  .phase-connector { flex: 1; height: 2px; background: #e2e8f0; margin: 0 8px; }
+  .phase-connector.done { background: #059669; }
+
+  .progress-log {
+    background: #0f1117; border-radius: 8px; padding: 16px;
+    font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+    font-size: 12px; color: #a8d8a8; max-height: 220px; overflow-y: auto;
+    line-height: 1.7;
+  }
+  .progress-log .log-dim  { color: #4a5568; }
+  .progress-log .log-ok   { color: #68d391; }
+  .progress-log .log-warn { color: #f6e05e; }
+  .progress-log .log-info { color: #63b3ed; }
+
+  .server-info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .server-info-item { background: #f8fafc; border-radius: 7px; padding: 12px; }
+  .server-info-item .label { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  .server-info-item .value { font-size: 14px; font-weight: 600; color: #1a1d2e; margin-top: 3px; word-break: break-all; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .pill-red    { background: #fee2e2; color: #b91c1c; }
+  .pill-green  { background: #d1fae5; color: #065f46; }
+  .pill-blue   { background: #dbeafe; color: #1d4ed8; }
+  .pill-yellow { background: #fef9c3; color: #92400e; }
+  .pill-gray   { background: #f1f5f9; color: #475569; }
+
+  /* ── Summary cards ── */
+  .summary-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+  .summary-card {
+    border-radius: 10px; padding: 18px 16px; text-align: center;
+    border: 1px solid transparent;
+  }
+  .summary-card .count { font-size: 34px; font-weight: 800; line-height: 1; }
+  .summary-card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-top: 5px; }
+  .sc-critical { background: #fff1f2; border-color: #fecdd3; }
+  .sc-critical .count { color: #be123c; }
+  .sc-critical .label { color: #be123c; }
+  .sc-high     { background: #fff7ed; border-color: #fed7aa; }
+  .sc-high     .count { color: #c2410c; }
+  .sc-high     .label { color: #c2410c; }
+  .sc-medium   { background: #fefce8; border-color: #fef08a; }
+  .sc-medium   .count { color: #854d0e; }
+  .sc-medium   .label { color: #854d0e; }
+  .sc-low      { background: #eff6ff; border-color: #bfdbfe; }
+  .sc-low      .count { color: #1d4ed8; }
+  .sc-low      .label { color: #1d4ed8; }
+  .sc-risk     { background: #f8fafc; border-color: #e2e8f0; }
+  .sc-risk     .count { color: #1a1d2e; }
+  .sc-risk     .label { color: #64748b; }
+
+  /* ── Findings list ── */
+  .findings-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
+  .tab-btn {
+    padding: 10px 20px; font-size: 13px; font-weight: 600; color: #94a3b8;
+    border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: color .15s, border-color .15s;
+  }
+  .tab-btn.active { color: #7c83f7; border-bottom-color: #7c83f7; }
+
+  .severity-group { margin-bottom: 24px; }
+  .severity-group-header {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+    padding: 6px 0; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0;
+  }
+  .sg-critical .severity-group-header { color: #be123c; }
+  .sg-high     .severity-group-header { color: #c2410c; }
+  .sg-medium   .severity-group-header { color: #854d0e; }
+  .sg-low      .severity-group-header { color: #1d4ed8; }
+  .sg-info     .severity-group-header { color: #059669; }
+
+  details.finding {
+    border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px;
+    overflow: hidden;
+  }
+  details.finding[open] { border-color: #c7d2fe; }
+  summary.finding-summary {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px; cursor: pointer; list-style: none;
+    background: #f8fafc; font-size: 14px; font-weight: 600; color: #1a1d2e;
+    user-select: none;
+  }
+  summary.finding-summary::-webkit-details-marker { display: none; }
+  details.finding[open] summary.finding-summary { background: #eef2ff; }
+  .finding-chevron { margin-left: auto; color: #94a3b8; transition: transform .2s; }
+  details.finding[open] .finding-chevron { transform: rotate(90deg); }
+
+  .finding-body { padding: 16px; border-top: 1px solid #e2e8f0; }
+  .finding-body p { font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 14px; }
+  .finding-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; margin-bottom: 6px; }
+  .finding-pre { background: #f8fafc; border-radius: 6px; padding: 10px 12px; font-size: 12px; font-family: monospace; color: #334155; white-space: pre-wrap; word-break: break-word; margin-bottom: 14px; }
+  .finding-evidence-list { list-style: none; padding: 0; margin-bottom: 14px; }
+  .finding-evidence-list li { font-size: 12px; color: #475569; padding: 3px 0; }
+  .finding-evidence-list li::before { content: "›  "; color: #94a3b8; }
+  .finding-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #64748b; }
+  .finding-meta span strong { color: #334155; }
+
+  .compliance-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .ctrl-tag { font-size: 11px; padding: 3px 8px; background: #eef2ff; color: #4338ca; border-radius: 4px; font-weight: 600; }
+
+  /* ── Compliance tab ── */
+  .compliance-framework { margin-bottom: 24px; }
+  .compliance-framework h4 { font-size: 14px; font-weight: 700; color: #1a1d2e; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+  .ctrl-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+  .ctrl-id   { font-size: 12px; font-weight: 700; color: #4338ca; min-width: 90px; font-family: monospace; }
+  .ctrl-info { flex: 1; }
+  .ctrl-name { font-size: 13px; font-weight: 600; color: #1a1d2e; }
+  .ctrl-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .ctrl-vulns { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+  /* ── Error section ── */
+  .error-banner { background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 10px; padding: 24px; color: #be123c; }
+  .error-banner h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .error-banner p  { font-size: 13px; color: #9f1239; margin-bottom: 4px; }
+
+  /* ── Helpers ── */
+  .hidden { display: none !important; }
+  .mt-12  { margin-top: 12px; }
+  .flex-end { display: flex; justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>MCP Scanner</h1>
+      <p>Security Audit Tool</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" id="nav-scan" onclick="showSection('scan')">
+        <span class="nav-icon">⬡</span> New Scan
+      </div>
+      <div class="nav-item" id="nav-results" onclick="showSection('results')">
+        <span class="nav-icon">◈</span> Results
+      </div>
+      <div class="nav-item" id="nav-compliance" onclick="showSection('compliance')">
+        <span class="nav-icon">◉</span> Compliance
+      </div>
+    </nav>
+    <div class="sidebar-footer">v0.2.1 · MIT License</div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="topbar-title">New Scan</h2>
+      <span class="topbar-badge" id="topbar-badge"></span>
+      <span style="flex:1"></span>
+      <button class="btn btn-secondary hidden" id="btn-new-scan" onclick="resetToScan()">+ New Scan</button>
+      <button class="btn btn-success hidden" id="btn-download" onclick="downloadReport()">↓ Download Report</button>
+    </div>
+
+    <div class="content">
+
+      <!-- ── Scan form ── -->
+      <div id="section-scan">
+        <div class="card">
+          <h3>Target</h3>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label>Server URL</label>
+              <input id="target-url" type="url" placeholder="http://localhost:3000" value="http://localhost:3000">
+            </div>
+            <div class="form-group">
+              <label>Compliance Framework</label>
+              <select id="framework">
+                <option value="">None (vulnerability scan only)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Report Format</label>
+              <select id="format">
+                <option value="json">JSON</option>
+                <option value="html">HTML</option>
+                <option value="pdf">PDF</option>
+                <option value="sarif">SARIF</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex-end mt-12">
+            <button class="btn btn-primary" id="btn-scan" onclick="startScan()">▶ Run Scan</button>
+          </div>
+        </div>
+
+        <div class="card" style="border-style:dashed; text-align:center; color:#94a3b8; padding:40px;">
+          <div style="font-size:36px; margin-bottom:12px;">⬡</div>
+          <div style="font-size:15px; font-weight:600; margin-bottom:6px;">No scan results yet</div>
+          <div style="font-size:13px;">Enter a target URL above and click Run Scan to begin.</div>
+        </div>
+      </div>
+
+      <!-- ── Progress ── -->
+      <div id="section-progress" class="hidden">
+        <div class="card">
+          <h3>Scan Progress</h3>
+
+          <!-- Phase indicators -->
+          <div class="phase-bar">
+            <div class="phase-step">
+              <div class="phase-dot" id="dot-discovery">1</div>
+              <span>Discovery</span>
+            </div>
+            <div class="phase-connector" id="conn-1"></div>
+            <div class="phase-step">
+              <div class="phase-dot" id="dot-analysis">2</div>
+              <span>Analysis</span>
+            </div>
+            <div class="phase-connector" id="conn-2"></div>
+            <div class="phase-step">
+              <div class="phase-dot" id="dot-reporting">3</div>
+              <span>Reporting</span>
+            </div>
+            <div class="phase-connector" id="conn-3"></div>
+            <div class="phase-step">
+              <div class="phase-dot" id="dot-complete">4</div>
+              <span>Complete</span>
+            </div>
+          </div>
+
+          <!-- Live log -->
+          <div class="progress-log" id="progress-log">
+            <span class="log-dim">Waiting for scan to start…</span>
+          </div>
+        </div>
+
+        <!-- Server info (appears after discovery) -->
+        <div class="card hidden" id="server-info-card">
+          <h3>Discovered Server</h3>
+          <div class="server-info-grid" id="server-info-grid"></div>
+        </div>
+      </div>
+
+      <!-- ── Results ── -->
+      <div id="section-results" class="hidden">
+        <div class="summary-row">
+          <div class="summary-card sc-critical">
+            <div class="count" id="cnt-critical">0</div>
+            <div class="label">Critical</div>
+          </div>
+          <div class="summary-card sc-high">
+            <div class="count" id="cnt-high">0</div>
+            <div class="label">High</div>
+          </div>
+          <div class="summary-card sc-medium">
+            <div class="count" id="cnt-medium">0</div>
+            <div class="label">Medium</div>
+          </div>
+          <div class="summary-card sc-low">
+            <div class="count" id="cnt-low">0</div>
+            <div class="label">Low</div>
+          </div>
+          <div class="summary-card sc-risk">
+            <div class="count" id="cnt-risk">0</div>
+            <div class="label">Risk Score</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="findings-tabs">
+            <button class="tab-btn active" id="tab-findings"    onclick="switchTab('findings')">Findings</button>
+            <button class="tab-btn"        id="tab-compliance"  onclick="switchTab('compliance')">Compliance</button>
+          </div>
+
+          <div id="pane-findings"></div>
+          <div id="pane-compliance" class="hidden"></div>
+        </div>
+      </div>
+
+      <!-- ── Error ── -->
+      <div id="section-error" class="hidden">
+        <div class="error-banner">
+          <h3>Scan Failed</h3>
+          <p id="error-message"></p>
+          <p id="error-detail" style="font-size:12px; color:#be123c; margin-top:8px;"></p>
+        </div>
+        <div class="flex-end mt-12">
+          <button class="btn btn-secondary" onclick="resetToScan()">← Try Again</button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let currentScanId = null;
+let currentResults = null;
+let currentSection = 'scan';
+let activeTab = 'findings';
+
+// ── Init ───────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('/api/frameworks');
+    const data = await res.json();
+    const sel = document.getElementById('framework');
+    data.frameworks.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.label;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.warn('Could not load frameworks:', e);
+  }
+}
+
+// ── Navigation ──────────────────────────────────────────────────────────────
+const SECTIONS = { scan: 'New Scan', results: 'Results', compliance: 'Compliance' };
+
+function showSection(name) {
+  document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+  const el = document.getElementById('section-' + name);
+  if (el) el.classList.remove('hidden');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+
+  document.getElementById('topbar-title').textContent = SECTIONS[name] || name;
+  currentSection = name;
+}
+
+function switchTab(name) {
+  ['findings', 'compliance'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('pane-' + t).classList.toggle('hidden', t !== name);
+  });
+  activeTab = name;
+}
+
+// ── Scan ────────────────────────────────────────────────────────────────────
+async function startScan() {
+  const target = document.getElementById('target-url').value.trim();
+  if (!target) { alert('Please enter a target URL.'); return; }
+
+  const framework = document.getElementById('framework').value || null;
+  const format    = document.getElementById('format').value;
+
+  // Switch to progress view
+  resetProgress();
+  showSectionDirect('progress');
+  document.getElementById('btn-new-scan').classList.remove('hidden');
+  document.getElementById('btn-download').classList.add('hidden');
+  document.getElementById('topbar-badge').textContent = '';
+
+  try {
+    const res = await fetch('/api/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, format, framework }),
+    });
+    const data = await res.json();
+    currentScanId = data.scan_id;
+    openEventStream(currentScanId);
+  } catch (e) {
+    showError('Could not start scan', e.message);
+  }
+}
+
+function showSectionDirect(name) {
+  document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('section-' + name);
+  if (el) el.classList.remove('hidden');
+  currentSection = name;
+}
+
+// ── SSE stream ──────────────────────────────────────────────────────────────
+function openEventStream(scanId) {
+  const es = new EventSource('/api/scan/' + scanId + '/stream');
+
+  es.onmessage = function(evt) {
+    const event = JSON.parse(evt.data);
+    handleEvent(event, es);
+  };
+
+  es.onerror = function() {
+    es.close();
+  };
+}
+
+function handleEvent(event, es) {
+  switch (event.type) {
+    case 'phase':
+      handlePhase(event);
+      break;
+    case 'discovery_result':
+      handleDiscovery(event);
+      break;
+    case 'progress':
+      handleProgress(event);
+      break;
+    case 'complete':
+      if (es) es.close();
+      handleComplete(event);
+      break;
+    case 'error':
+      if (es) es.close();
+      showError(event.message, event.detail);
+      break;
+  }
+}
+
+// ── Phase tracking ──────────────────────────────────────────────────────────
+const PHASE_ORDER = ['discovery', 'analysis', 'reporting', 'complete'];
+let completedPhases = [];
+
+function handlePhase(event) {
+  const phase = event.phase;
+  const msg   = event.message;
+
+  // Mark previous phases done
+  const idx = PHASE_ORDER.indexOf(phase);
+  PHASE_ORDER.slice(0, idx).forEach(p => markPhaseDone(p));
+
+  // Mark current active
+  const dot = document.getElementById('dot-' + phase);
+  if (dot) { dot.classList.remove('done'); dot.classList.add('active'); }
+
+  logLine('log-info', '⟳  ' + msg);
+}
+
+function markPhaseDone(phase) {
+  const dot = document.getElementById('dot-' + phase);
+  if (dot) { dot.classList.remove('active'); dot.classList.add('done'); }
+  const idx = PHASE_ORDER.indexOf(phase);
+  if (idx >= 0) {
+    const conn = document.getElementById('conn-' + (idx + 1));
+    if (conn) conn.classList.add('done');
+  }
+}
+
+function handleProgress(event) {
+  const pct = Math.round((event.checks_done / event.checks_total) * 100);
+  let msg = `[${event.checks_done}/${event.checks_total}] ${event.latest_check} — ${pct}%`;
+  if (event.latest_finding) {
+    msg += ` → <span class="log-warn">⚠ ${event.latest_finding}</span>`;
+  } else {
+    msg += ` → <span class="log-ok">✓ Clean</span>`;
+  }
+  logLineHTML(msg);
+}
+
+function handleDiscovery(event) {
+  const s = event.server;
+  logLine('log-ok', '✓  Server discovered: ' + s.name + ' (' + s.url + ')');
+
+  const card = document.getElementById('server-info-card');
+  card.classList.remove('hidden');
+
+  const grid = document.getElementById('server-info-grid');
+  grid.innerHTML = '';
+
+  const authPill = s.has_authentication
+    ? '<span class="pill pill-green">Yes</span>'
+    : '<span class="pill pill-red">No</span>';
+  const encPill = s.has_encryption
+    ? '<span class="pill pill-green">Yes</span>'
+    : '<span class="pill pill-red">No</span>';
+
+  const items = [
+    ['Name',           s.name],
+    ['Version',        s.version],
+    ['URL',            s.url],
+    ['Tools',          s.tools.length],
+    ['Authentication', authPill],
+    ['Encryption',     encPill],
+  ];
+
+  items.forEach(([label, val]) => {
+    const div = document.createElement('div');
+    div.className = 'server-info-item';
+    div.innerHTML = `<div class="label">${label}</div><div class="value">${val}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+function handleComplete(event) {
+  currentResults = event;
+
+  // Mark all phases done
+  PHASE_ORDER.forEach(markPhaseDone);
+
+  logLine('log-ok', '✓  Scan complete in ' + event.duration_seconds.toFixed(1) + 's — ' +
+    event.vulnerabilities.length + ' finding(s)');
+
+  // Switch to results view after a brief pause so the user sees the complete log
+  setTimeout(() => {
+    renderResults(event);
+    showSectionDirect('results');
+    document.getElementById('nav-results').classList.add('active');
+    document.getElementById('topbar-title').textContent = 'Results';
+    document.getElementById('topbar-badge').textContent =
+      event.vulnerabilities.length + ' finding(s)';
+    if (event.report_available) {
+      document.getElementById('btn-download').classList.remove('hidden');
+    }
+  }, 800);
+}
+
+// ── Render results ──────────────────────────────────────────────────────────
+function renderResults(event) {
+  const s = event.summary;
+  document.getElementById('cnt-critical').textContent = s.CRITICAL || 0;
+  document.getElementById('cnt-high').textContent     = s.HIGH     || 0;
+  document.getElementById('cnt-medium').textContent   = s.MEDIUM   || 0;
+  document.getElementById('cnt-low').textContent      = s.LOW      || 0;
+  document.getElementById('cnt-risk').textContent     = s.risk_score || 0;
+
+  renderFindings(event.vulnerabilities);
+  renderCompliance(event.vulnerabilities);
+}
+
+const SORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
+const SCLASS = { CRITICAL: 'sg-critical', HIGH: 'sg-high', MEDIUM: 'sg-medium', LOW: 'sg-low', INFO: 'sg-info' };
+
+function renderFindings(vulns) {
+  const pane = document.getElementById('pane-findings');
+  pane.innerHTML = '';
+
+  if (vulns.length === 0) {
+    pane.innerHTML = '<div style="text-align:center; padding:40px; color:#64748b;">No vulnerabilities found — server appears secure.</div>';
+    return;
+  }
+
+  const grouped = {};
+  SORDER.forEach(s => grouped[s] = []);
+  vulns.forEach(v => { if (grouped[v.severity]) grouped[v.severity].push(v); });
+
+  SORDER.forEach(sev => {
+    const group = grouped[sev];
+    if (group.length === 0) return;
+
+    const div = document.createElement('div');
+    div.className = 'severity-group ' + SCLASS[sev];
+    div.innerHTML = `<div class="severity-group-header">${sev} (${group.length})</div>`;
+
+    group.forEach(v => {
+      const det = document.createElement('details');
+      det.className = 'finding';
+
+      const controls = buildControlTags(v);
+      det.innerHTML = `
+        <summary class="finding-summary">
+          <span class="pill pill-${sevColor(v.severity)}">${v.severity}</span>
+          ${escHtml(v.title)}
+          <span class="finding-chevron">›</span>
+        </summary>
+        <div class="finding-body">
+          <p>${escHtml(v.description)}</p>
+
+          <div class="finding-section-label">Remediation</div>
+          <div class="finding-pre">${escHtml(v.remediation || '—')}</div>
+
+          <div class="finding-section-label">Evidence</div>
+          <ul class="finding-evidence-list">
+            ${(v.evidence || []).map(e => `<li>${escHtml(e)}</li>`).join('')}
+          </ul>
+
+          <div class="finding-meta">
+            ${v.cwe_id   ? `<span><strong>CWE:</strong> ${escHtml(v.cwe_id)}</span>` : ''}
+            ${v.cvss_score != null ? `<span><strong>CVSS:</strong> ${v.cvss_score}</span>` : ''}
+            ${v.affected_component ? `<span><strong>Component:</strong> ${escHtml(v.affected_component)}</span>` : ''}
+          </div>
+
+          ${controls ? `<div class="finding-section-label" style="margin-top:12px;">Compliance Controls</div>
+          <div class="compliance-controls">${controls}</div>` : ''}
+        </div>
+      `;
+      div.appendChild(det);
+    });
+
+    pane.appendChild(div);
+  });
+}
+
+function buildControlTags(v) {
+  if (!v.compliance_controls) return '';
+  const tags = [];
+  Object.entries(v.compliance_controls).forEach(([fw, controls]) => {
+    (controls || []).forEach(c => {
+      tags.push(`<span class="ctrl-tag" title="${escHtml(fw)}: ${escHtml(c.name || '')}">${escHtml(c.id)}</span>`);
+    });
+  });
+  return tags.join('');
+}
+
+function renderCompliance(vulns) {
+  const pane = document.getElementById('pane-compliance');
+  pane.innerHTML = '';
+
+  // Collect all unique controls across all frameworks
+  const byFramework = {};
+  vulns.forEach(v => {
+    (v.compliance_frameworks || []).forEach(fw => {
+      if (!byFramework[fw]) byFramework[fw] = {};
+      const controls = (v.compliance_controls || {})[fw] || [];
+      controls.forEach(c => {
+        if (!byFramework[fw][c.id]) byFramework[fw][c.id] = { ctrl: c, vulns: [] };
+        byFramework[fw][c.id].vulns.push(v.title);
+      });
+    });
+  });
+
+  if (Object.keys(byFramework).length === 0) {
+    pane.innerHTML = '<div style="text-align:center; padding:40px; color:#64748b;">No compliance framework was selected, or no findings map to controls.</div>';
+    return;
+  }
+
+  Object.entries(byFramework).forEach(([fw, controls]) => {
+    const div = document.createElement('div');
+    div.className = 'compliance-framework';
+    div.innerHTML = `<h4>${escHtml(fw)}</h4>`;
+
+    Object.values(controls).forEach(({ ctrl, vulns }) => {
+      const row = document.createElement('div');
+      row.className = 'ctrl-row';
+      row.innerHTML = `
+        <div class="ctrl-id">${escHtml(ctrl.id)}</div>
+        <div class="ctrl-info">
+          <div class="ctrl-name">${escHtml(ctrl.name || '')}</div>
+          <div class="ctrl-desc">${escHtml(ctrl.description || '')}</div>
+          <div class="ctrl-vulns">Triggered by: ${vulns.map(escHtml).join(', ')}</div>
+        </div>
+      `;
+      div.appendChild(row);
+    });
+
+    pane.appendChild(div);
+  });
+}
+
+// ── Report download ──────────────────────────────────────────────────────────
+function downloadReport() {
+  if (!currentScanId) return;
+  window.location.href = '/api/scan/' + currentScanId + '/report';
+}
+
+// ── Error handling ──────────────────────────────────────────────────────────
+function showError(message, detail) {
+  document.getElementById('error-message').textContent = message;
+  document.getElementById('error-detail').textContent  = detail || '';
+  showSectionDirect('error');
+  document.getElementById('topbar-title').textContent  = 'Scan Failed';
+}
+
+// ── Reset ────────────────────────────────────────────────────────────────────
+function resetToScan() {
+  currentScanId = null;
+  currentResults = null;
+  showSection('scan');
+  document.getElementById('btn-new-scan').classList.add('hidden');
+  document.getElementById('btn-download').classList.add('hidden');
+  document.getElementById('topbar-badge').textContent = '';
+}
+
+function resetProgress() {
+  document.getElementById('progress-log').innerHTML = '<span class="log-dim">Starting…</span>';
+  document.getElementById('server-info-card').classList.add('hidden');
+  PHASE_ORDER.forEach(p => {
+    const dot = document.getElementById('dot-' + p);
+    if (dot) { dot.classList.remove('active', 'done'); }
+  });
+  [1, 2, 3].forEach(i => {
+    const conn = document.getElementById('conn-' + i);
+    if (conn) conn.classList.remove('done');
+  });
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function logLine(cls, text) {
+  const log = document.getElementById('progress-log');
+  const span = document.createElement('div');
+  span.className = cls;
+  span.textContent = text;
+  log.appendChild(span);
+  log.scrollTop = log.scrollHeight;
+}
+
+function logLineHTML(html) {
+  const log = document.getElementById('progress-log');
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function sevColor(sev) {
+  return { CRITICAL: 'red', HIGH: 'yellow', MEDIUM: 'yellow', LOW: 'blue', INFO: 'green' }[sev] || 'gray';
+}
+
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

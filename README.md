@@ -7,6 +7,8 @@
 
 Security auditing tool for [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers. Detects authentication gaps, injection risks, AI-specific attack vectors (tool poisoning, indirect prompt injection), and maps findings to compliance frameworks.
 
+Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF output.
+
 ## Features
 
 ### Security Checks (13 total)
@@ -46,6 +48,26 @@ Every finding is automatically mapped to applicable controls across:
 - PCI DSS 3.2.1
 - SOC 2 Type II
 
+## Web Dashboard
+
+The easiest way to use the scanner — no CLI knowledge required:
+
+```bash
+pip install mcp-security-scanner
+mcp-security-scanner serve
+```
+
+Opens `http://localhost:8080` in your browser automatically. From there:
+- Enter a target URL and pick a compliance framework
+- Watch findings stream in live as each check runs
+- Expand any finding for description, remediation steps, evidence, and mapped compliance controls
+- Download the report (JSON / HTML / PDF / SARIF)
+
+```bash
+mcp-security-scanner serve --port 9090   # custom port
+mcp-security-scanner serve --no-browser  # headless / server use
+```
+
 ## Installation
 
 ### pip (recommended)
@@ -68,7 +90,7 @@ python src/main.py scan --target http://localhost:3000
 make build && make demo
 ```
 
-## Usage
+## CLI Usage
 
 ### Scan
 ```bash
@@ -177,6 +199,10 @@ src/
 │   ├── frameworks.py    # 50+ controls across 6 frameworks
 │   ├── mapper.py        # Vulnerability → framework control mapping
 │   └── reporter.py      # Compliance-specific report formats
+├── web/
+│   ├── app.py           # FastAPI backend: scan lifecycle, SSE, report download
+│   └── static/
+│       └── index.html   # Self-contained SPA (no CDN, works offline)
 └── models/              # MCPServer, Vulnerability, ScanReport
 ```
 
