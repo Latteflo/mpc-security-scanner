@@ -31,10 +31,29 @@ from pydantic import BaseModel
 # CLI does, regardless of whether the package was pip-installed or run from source.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from compliance.frameworks import ComplianceFramework
+from compliance.frameworks import (
+    ComplianceFramework,
+    ISO27001_CONTROLS,
+    NIST_CSF_CONTROLS,
+    NIST_800_53_CONTROLS,
+    MITRE_ATTCK_TECHNIQUES,
+    PCI_DSS_CONTROLS,
+    SOC2_CONTROLS,
+)
+from compliance.mapper import ComplianceMapper
 from scanner.discovery import MCPDiscovery
 from scanner.analyzer import SecurityAnalyzer
 from scanner.reporter import ReportGenerator
+
+# All controls defined per framework — used to identify NOT_COVERED controls.
+_FRAMEWORK_CONTROLS: dict[str, dict] = {
+    "ISO27001":    ISO27001_CONTROLS,
+    "NIST_CSF":    NIST_CSF_CONTROLS,
+    "NIST_800_53": NIST_800_53_CONTROLS,
+    "MITRE_ATTCK": MITRE_ATTCK_TECHNIQUES,
+    "PCI_DSS":     PCI_DSS_CONTROLS,
+    "SOC2":        SOC2_CONTROLS,
+}
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -184,11 +203,14 @@ async def _run_scan(state: ScanState) -> None:
         raw = sum(weights.get(s, 0) * c for s, c in severity_counts.items())
         risk_score = min(100, raw)
 
+        compliance_report = _build_compliance_report(vulnerabilities, analyzer.compliance_mapper)
+
         emit({
             "type": "complete",
             "scan_id": state.scan_id,
             "summary": {**severity_counts, "risk_score": risk_score},
             "vulnerabilities": [_vuln_to_dict(v) for v in vulnerabilities],
+            "compliance_report": compliance_report,
             "report_available": state.fmt != "terminal",
             "duration_seconds": (datetime.utcnow() - state.created_at).total_seconds(),
         })
@@ -198,6 +220,90 @@ async def _run_scan(state: ScanState) -> None:
         state.status = "error"
         state.error = str(exc)
         emit({"type": "error", "message": "Scan failed", "detail": str(exc)})
+
+
+def _build_compliance_report(vulnerabilities, mapper: ComplianceMapper) -> dict:
+    """
+    Build a per-framework compliance breakdown from scan results.
+
+    For each framework we classify every control it defines into one of:
+      FAILING     — at least one found vulnerability maps to this control
+      PASSING     — the scanner covers this control (via a mapped vuln ID) but
+                    no finding was produced, so the check passed
+      NOT_COVERED — no scanner check addresses this control at all
+
+    Score = passing / (passing + failing) × 100
+    (NOT_COVERED controls don't count against the score — the scanner simply
+    doesn't have a check for them yet.)
+    """
+    found_ids = {v.id for v in vulnerabilities}
+
+    # Reverse the mapper: (framework_value, control_id) → set of vuln IDs that
+    # would trigger it.  This tells us which controls the scanner "covers".
+    covered: dict[tuple, set] = {}  # (fw_value, ctrl_id) → {vuln_id, ...}
+    for vuln_id, fw_map in mapper.mappings.items():
+        for fw_enum, controls in fw_map.items():
+            for ctrl in controls:
+                key = (fw_enum.value, ctrl.id)
+                covered.setdefault(key, set()).add(vuln_id)
+
+    report = {}
+    for fw_enum in ComplianceFramework:
+        fw_value = fw_enum.value
+        all_controls = _FRAMEWORK_CONTROLS.get(fw_value, {})
+
+        passing_list = []
+        failing_list = []
+        not_covered_list = []
+
+        for ctrl_id, ctrl in all_controls.items():
+            key = (fw_value, ctrl_id)
+            covering_vulns = covered.get(key, set())
+
+            if not covering_vulns:
+                not_covered_list.append({
+                    "id": ctrl.id,
+                    "name": ctrl.name,
+                    "category": ctrl.category,
+                    "description": ctrl.description,
+                })
+            elif covering_vulns & found_ids:
+                # At least one vulnerability that maps to this control was found.
+                triggered_by = [
+                    v.title for v in vulnerabilities if v.id in covering_vulns
+                ]
+                failing_list.append({
+                    "id": ctrl.id,
+                    "name": ctrl.name,
+                    "category": ctrl.category,
+                    "description": ctrl.description,
+                    "triggered_by": triggered_by,
+                })
+            else:
+                passing_list.append({
+                    "id": ctrl.id,
+                    "name": ctrl.name,
+                    "category": ctrl.category,
+                    "description": ctrl.description,
+                })
+
+        covered_total = len(passing_list) + len(failing_list)
+        score = round(len(passing_list) / covered_total * 100) if covered_total else 100
+
+        report[fw_value] = {
+            "score": score,
+            "passing": len(passing_list),
+            "failing": len(failing_list),
+            "not_covered": len(not_covered_list),
+            "total": len(all_controls),
+            "controls": {
+                "passing":     passing_list,
+                "failing":     failing_list,
+                "not_covered": not_covered_list,
+            },
+        }
+
+    return report
 
 
 def _vuln_to_dict(v) -> dict:
