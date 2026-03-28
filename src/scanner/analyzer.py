@@ -20,6 +20,9 @@ from checks.ai_specific import check_tool_poisoning, check_overpermissive_schema
 from checks.ssrf import check_ssrf
 from checks.tls import check_tls
 from checks.prompt_leakage import check_prompt_leakage
+from checks.headers import check_security_headers
+from checks.error_disclosure import check_error_disclosure
+from checks.debug_endpoints import check_debug_endpoints
 from compliance.mapper import ComplianceMapper
 
 console = Console()
@@ -61,6 +64,9 @@ class SecurityAnalyzer:
         await self._check_ai_specific(server)
         await self._check_ssrf(server)
         await self._check_tls(server)
+        await self._check_headers(server)
+        await self._check_error_disclosure(server)
+        await self._check_debug_endpoints(server)
 
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()
@@ -99,6 +105,27 @@ class SecurityAnalyzer:
     async def _check_tls(self, server: MCPServer):
         """Check TLS protocol version and certificate validity (HTTPS only)."""
         for vuln in await check_tls(server):
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_headers(self, server: MCPServer):
+        """Check for missing HTTP security headers."""
+        vuln = await check_security_headers(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_error_disclosure(self, server: MCPServer):
+        """Check for verbose error / stack trace disclosure."""
+        vuln = await check_error_disclosure(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_debug_endpoints(self, server: MCPServer):
+        """Check for exposed debug, admin, and introspection endpoints."""
+        vuln = await check_debug_endpoints(server)
+        if vuln:
             self.vulnerabilities.append(vuln)
             logger.warning(f"Found: {vuln.title}")
 

@@ -11,7 +11,7 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 
 ## Features
 
-### Security Checks (16 total)
+### Security Checks (19 total)
 
 | Check | ID | Severity |
 |-------|----|----------|
@@ -31,6 +31,9 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 | **SSRF via tool parameters** | **MCP-SSRF-001** | **HIGH/CRITICAL** |
 | **Weak TLS protocol** | **MCP-TLS-001** | **HIGH** |
 | **TLS certificate issues** | **MCP-TLS-002** | **HIGH** |
+| **Missing security headers** | **MCP-HDR-001** | **LOW** |
+| **Verbose error disclosure** | **MCP-ERR-001** | **MEDIUM** |
+| **Debug endpoint exposure** | **MCP-DEBUG-001** | **MEDIUM/HIGH** |
 
 ### Transport Support
 - HTTP/HTTPS JSON-RPC 2.0

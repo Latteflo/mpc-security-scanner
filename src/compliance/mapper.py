@@ -379,6 +379,67 @@ class ComplianceMapper:
                 ],
             },
 
+            # Missing Security Headers (MCP-HDR-001)
+            "MCP-HDR-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                    ISO27001_CONTROLS["A.13.1.1"],  # Network controls
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.IP-1"],   # Baseline configuration
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SC-8"],   # Transmission confidentiality
+                    NIST_800_53_CONTROLS["CM-7"],   # Least functionality
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["6.5.1"],
+                ],
+            },
+
+            # Verbose Error Disclosure (MCP-ERR-001)
+            "MCP-ERR-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                    ISO27001_CONTROLS["A.12.6.1"],  # Management of technical vulnerabilities
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.IP-1"],   # Baseline configuration
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                    NIST_800_53_CONTROLS["CM-7"],   # Least functionality
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1083"],  # File and directory discovery
+                ],
+            },
+
+            # Debug Endpoint Exposure (MCP-DEBUG-001)
+            "MCP-DEBUG-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.9.4.1"],   # Information access restriction
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.IP-1"],   # Baseline configuration
+                    NIST_CSF_CONTROLS["PR.AC-1"],   # Identity and credential management
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["CM-7"],   # Least functionality
+                    NIST_800_53_CONTROLS["AC-3"],   # Access enforcement
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1083"],  # File and directory discovery
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["6.5.1"],
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.1"],
+                ],
+            },
+
             # TLS Certificate Issues (MCP-TLS-002)
             "MCP-TLS-002": {
                 ComplianceFramework.ISO27001: [
