@@ -17,6 +17,9 @@ from checks.cors import check_cors_misconfiguration
 from checks.rate_limiting import check_rate_limiting
 from checks.injection import check_sql_injection, check_command_injection, check_path_traversal
 from checks.ai_specific import check_tool_poisoning, check_overpermissive_schema, check_indirect_injection_risk
+from checks.ssrf import check_ssrf
+from checks.tls import check_tls
+from checks.prompt_leakage import check_prompt_leakage
 from compliance.mapper import ComplianceMapper
 
 console = Console()
@@ -56,7 +59,9 @@ class SecurityAnalyzer:
         # which discovery now extracts. On servers that don't return metadata the
         # checks return None cleanly without producing false positives.
         await self._check_ai_specific(server)
-        
+        await self._check_ssrf(server)
+        await self._check_tls(server)
+
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()
         
@@ -77,12 +82,25 @@ class SecurityAnalyzer:
         logger.debug(f"Added compliance mappings to {len(self.vulnerabilities)} vulnerabilities")
     
     async def _check_ai_specific(self, server: MCPServer):
-        """Check for AI-specific vulnerabilities: tool poisoning, schema issues, indirect injection."""
-        for check_fn in (check_tool_poisoning, check_overpermissive_schema, check_indirect_injection_risk):
+        """Check for AI-specific vulnerabilities: tool poisoning, schema issues, indirect injection, prompt leakage."""
+        for check_fn in (check_tool_poisoning, check_overpermissive_schema, check_indirect_injection_risk, check_prompt_leakage):
             vuln = await check_fn(server)
             if vuln:
                 self.vulnerabilities.append(vuln)
                 logger.warning(f"Found: {vuln.title}")
+
+    async def _check_ssrf(self, server: MCPServer):
+        """Check for SSRF vulnerabilities in URL-accepting tools."""
+        vuln = await check_ssrf(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_tls(self, server: MCPServer):
+        """Check TLS protocol version and certificate validity (HTTPS only)."""
+        for vuln in await check_tls(server):
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
 
     async def _check_injection_attacks(self, server: MCPServer):
         """Check for injection vulnerabilities"""

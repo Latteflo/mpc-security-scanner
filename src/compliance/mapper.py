@@ -314,6 +314,88 @@ class ComplianceMapper:
                     MITRE_ATTCK_TECHNIQUES["T1190"],  # Exploit public-facing application
                 ],
             },
+
+            # System Prompt Leakage (MCP-AI-004)
+            "MCP-AI-004": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.DS-5"],   # Protections against data leaks
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-3"],   # Malicious code protection
+                    NIST_800_53_CONTROLS["AC-3"],   # Access enforcement
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1059"],  # Command and scripting interpreter
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.1"],
+                ],
+            },
+
+            # SSRF (MCP-SSRF-001)
+            "MCP-SSRF-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.13.1.1"],  # Network controls
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.AC-1"],   # Identity and credential management
+                    NIST_CSF_CONTROLS["DE.CM-1"],   # Network monitoring
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SC-8"],   # Transmission confidentiality and integrity
+                    NIST_800_53_CONTROLS["SI-10"],  # Input validation
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1190"],  # Exploit public-facing application
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["6.5.1"],
+                ],
+            },
+
+            # Weak TLS Protocol (MCP-TLS-001)
+            "MCP-TLS-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.10.1.1"],  # Cryptographic controls policy
+                    ISO27001_CONTROLS["A.13.1.1"],  # Network controls
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.DS-2"],   # Data-in-transit protection
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SC-8"],   # Transmission confidentiality
+                    NIST_800_53_CONTROLS["SC-13"],  # Cryptographic protection
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["4.1"],
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.6"],
+                ],
+            },
+
+            # TLS Certificate Issues (MCP-TLS-002)
+            "MCP-TLS-002": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.10.1.2"],  # Key management
+                    ISO27001_CONTROLS["A.13.2.1"],  # Information transfer policies
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.DS-2"],   # Data-in-transit protection
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SC-13"],  # Cryptographic protection
+                    NIST_800_53_CONTROLS["IA-2"],   # Identification and authentication
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["4.1"],
+                ],
+            },
         }
     
     def get_controls(

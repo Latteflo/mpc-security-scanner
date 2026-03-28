@@ -11,22 +11,26 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 
 ## Features
 
-### Security Checks (13 total)
+### Security Checks (16 total)
 
 | Check | ID | Severity |
 |-------|----|----------|
 | Missing authentication | MCP-AUTH-001 | CRITICAL |
-| Unencrypted transport | MCP-ENC-001 | HIGH |
+| Unencrypted transport | MCP-CRYPTO-001 | HIGH |
 | CORS misconfiguration | MCP-CORS-001 | HIGH/CRITICAL |
-| No rate limiting | MCP-RL-001 | HIGH |
+| No rate limiting | MCP-RATE-001 | HIGH |
 | SQL injection | MCP-INJ-001 | CRITICAL |
 | Command injection | MCP-INJ-003 | CRITICAL |
 | Path traversal | MCP-INJ-005 | CRITICAL |
-| Sensitive tool exposure | MCP-TOOLS-001 | varies |
+| Sensitive tool exposure | MCP-AUTHZ-001 | varies |
 | Insecure configuration | MCP-CONFIG-001/002 | LOW/INFO |
 | **Tool poisoning** | **MCP-AI-001** | **HIGH/CRITICAL** |
 | **Over-permissive schema** | **MCP-AI-002** | **MEDIUM** |
 | **Indirect prompt injection** | **MCP-AI-003** | **MEDIUM/HIGH** |
+| **System prompt leakage** | **MCP-AI-004** | **MEDIUM/HIGH** |
+| **SSRF via tool parameters** | **MCP-SSRF-001** | **HIGH/CRITICAL** |
+| **Weak TLS protocol** | **MCP-TLS-001** | **HIGH** |
+| **TLS certificate issues** | **MCP-TLS-002** | **HIGH** |
 
 ### Transport Support
 - HTTP/HTTPS JSON-RPC 2.0
