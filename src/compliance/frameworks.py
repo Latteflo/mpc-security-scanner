@@ -159,12 +159,26 @@ NIST_CSF_CONTROLS = {
         framework=ComplianceFramework.NIST_CSF,
         category="Protect - Data Security"
     ),
+    "PR.DS-5": FrameworkControl(
+        id="PR.DS-5",
+        name="Protections Against Data Leaks",
+        description="Protections against data leaks are implemented",
+        framework=ComplianceFramework.NIST_CSF,
+        category="Protect - Data Security"
+    ),
     "DE.AE-5": FrameworkControl(
         id="DE.AE-5",
         name="Incident Alert Thresholds",
         description="Incident alert thresholds are established",
         framework=ComplianceFramework.NIST_CSF,
         category="Detect - Anomalies and Events"
+    ),
+    "DE.CM-1": FrameworkControl(
+        id="DE.CM-1",
+        name="Network Monitoring",
+        description="The network is monitored to detect potential cybersecurity events",
+        framework=ComplianceFramework.NIST_CSF,
+        category="Detect - Security Continuous Monitoring"
     ),
     "PR.IP-1": FrameworkControl(
         id="PR.IP-1",
@@ -183,6 +197,20 @@ NIST_800_53_CONTROLS = {
         description="Uniquely identify and authenticate organizational users and associate that unique identification with processes",
         framework=ComplianceFramework.NIST_800_53,
         category="Identification and Authentication"
+    ),
+    "IA-2": FrameworkControl(
+        id="IA-2",
+        name="Identification and Authentication",
+        description="Uniquely identify and authenticate organizational users and processes acting on behalf of organizational users",
+        framework=ComplianceFramework.NIST_800_53,
+        category="Identification and Authentication"
+    ),
+    "SI-3": FrameworkControl(
+        id="SI-3",
+        name="Malicious Code Protection",
+        description="Implement malicious code protection mechanisms at system entry and exit points",
+        framework=ComplianceFramework.NIST_800_53,
+        category="System and Information Integrity"
     ),
     "AC-2": FrameworkControl(
         id="AC-2",

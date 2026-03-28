@@ -30,9 +30,13 @@ def cli():
 @cli.command()
 @click.option("--target", "-t", required=True, help="Target MCP server URL")
 @click.option("--output", "-o", default="reports/scan_results.json", help="Output file")
-@click.option("--format", "-f", type=click.Choice(["json", "html", "terminal", "pdf"]), default="terminal")
+@click.option("--format", "-f", type=click.Choice(["json", "html", "terminal", "pdf", "sarif"]), default="terminal")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
-def scan(target: str, output: str, format: str, verbose: bool):
+@click.option("--baseline", "-b", default=None,
+              help="Path to a baseline scan JSON. Only new findings (not in the baseline) are reported.")
+@click.option("--save-baseline", default=None,
+              help="Save current findings as a baseline JSON to this path for future diff scans.")
+def scan(target: str, output: str, format: str, verbose: bool, baseline: str, save_baseline: str):
     """Scan an MCP server for security vulnerabilities."""
     
     async def run_scan():
@@ -48,12 +52,12 @@ def scan(target: str, output: str, format: str, verbose: bool):
             with console.status("[bold green]Discovering MCP server..."):
                 discovery = MCPDiscovery()
                 server_info = await discovery.probe_server(target)
-                
+
                 if not server_info:
                     console.print("[bold red]❌ Could not connect to MCP server[/bold red]")
                     console.print("[dim]Make sure the server is running and accessible[/dim]")
-                    return
-                
+                    sys.exit(3)
+
                 console.print(f"[green]✓[/green] Server discovered")
                 if server_info.name:
                     console.print(f"  Name: {server_info.name}")
@@ -71,6 +75,15 @@ def scan(target: str, output: str, format: str, verbose: bool):
                 console.print(f"[green]✓[/green] Analysis complete")
                 console.print(f"  Found {len(vulnerabilities)} potential issues\n")
             
+            # Optional: baseline diff — suppress findings already known from a
+            # previous scan so the team only sees what's new.
+            if baseline:
+                vulnerabilities = _apply_baseline(vulnerabilities, baseline, console)
+
+            # Optional: save current findings so future scans can diff against them
+            if save_baseline:
+                _save_baseline(vulnerabilities, target, save_baseline, console)
+
             # Phase 3: Reporting
             console.print("[bold]📊 Scan Results:[/bold]\n")
             
@@ -121,15 +134,31 @@ def scan(target: str, output: str, format: str, verbose: bool):
                     format=format
                 )
                 console.print(f"\n[green]✓[/green] Report saved to: {report_path}")
-            
+
             console.print("\n[bold green]✅ Scan completed successfully![/bold green]\n")
-            
+
+            # Exit with a non-zero code when serious findings are present so that
+            # CI/CD pipelines can block on security issues without parsing output.
+            #
+            # Exit codes:
+            #   0  — no findings, or only LOW/INFO
+            #   1  — at least one HIGH finding
+            #   2  — at least one CRITICAL finding (checked first, takes priority)
+            #
+            # This follows the convention used by tools like bandit and semgrep.
+            critical = any(v.severity.value == "CRITICAL" for v in vulnerabilities)
+            high     = any(v.severity.value == "HIGH"     for v in vulnerabilities)
+            if critical:
+                sys.exit(2)
+            elif high:
+                sys.exit(1)
+
         except Exception as e:
             console.print(f"\n[bold red]❌ Error during scan:[/bold red] {str(e)}")
             if verbose:
                 console.print_exception()
             sys.exit(1)
-    
+
     asyncio.run(run_scan())
 
 
@@ -391,6 +420,77 @@ def checks():
     console.print("• [cyan]MITRE ATT&CK:[/cyan] 8+ techniques")
     console.print("• [cyan]PCI DSS:[/cyan] 3+ requirements")
     console.print("• [cyan]SOC 2:[/cyan] 3+ criteria\n")
+
+
+def _apply_baseline(vulnerabilities, baseline_path: str, console) -> list:
+    """
+    Filter out vulnerabilities that already appear in a previous scan baseline.
+
+    A finding is considered "known" when its vulnerability ID matches an ID
+    recorded in the baseline.  We match on ID only (not on affected component
+    or evidence) because the same class of issue on the same server is the same
+    problem — even if its exact description changed slightly between scans.
+
+    This lets teams say "we know about MCP-AUTH-001, only alert on new issues"
+    without suppressing every future instance of every finding type globally.
+    """
+    import json as _json
+    try:
+        with open(baseline_path) as f:
+            baseline_data = _json.load(f)
+
+        # Support two baseline formats:
+        #  1. A list of vulnerability ID strings (minimal format)
+        #  2. A dict with a "vulnerability_ids" key (produced by --save-baseline)
+        if isinstance(baseline_data, list):
+            known_ids = set(baseline_data)
+        else:
+            known_ids = set(baseline_data.get("vulnerability_ids", []))
+
+        before = len(vulnerabilities)
+        new_vulns = [v for v in vulnerabilities if v.id not in known_ids]
+        suppressed = before - len(new_vulns)
+
+        if suppressed:
+            console.print(
+                f"[dim]Baseline: suppressed {suppressed} known finding(s), "
+                f"{len(new_vulns)} new finding(s) remain.[/dim]\n"
+            )
+        else:
+            console.print("[dim]Baseline: no previously known findings to suppress.[/dim]\n")
+
+        return new_vulns
+
+    except FileNotFoundError:
+        console.print(f"[yellow]⚠ Baseline file not found: {baseline_path}[/yellow]")
+        return vulnerabilities
+    except Exception as e:
+        console.print(f"[yellow]⚠ Could not load baseline: {e}[/yellow]")
+        return vulnerabilities
+
+
+def _save_baseline(vulnerabilities, target: str, output_path: str, console):
+    """
+    Persist current vulnerability IDs as a baseline for future diff scans.
+
+    The baseline file records only IDs — not full vulnerability details — so it
+    remains stable across scanner version upgrades that might change description
+    wording or evidence formatting.
+    """
+    import json as _json
+    from datetime import datetime
+    try:
+        baseline = {
+            "created_at": datetime.now().isoformat(),
+            "target": target,
+            "vulnerability_ids": sorted({v.id for v in vulnerabilities}),
+            "total_findings": len(vulnerabilities),
+        }
+        with open(output_path, "w") as f:
+            _json.dump(baseline, f, indent=2)
+        console.print(f"[green]✓[/green] Baseline saved to: {output_path}")
+    except Exception as e:
+        console.print(f"[yellow]⚠ Could not save baseline: {e}[/yellow]")
 
 
 def main():

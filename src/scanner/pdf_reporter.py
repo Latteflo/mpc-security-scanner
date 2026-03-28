@@ -8,175 +8,212 @@ from pathlib import Path
 from typing import List
 from datetime import datetime
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, Image, KeepTogether
+    PageBreak, KeepTogether
 )
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 
-# Fix imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from models import MCPServer, Vulnerability, ScanReport, Severity
+from models import MCPServer, Vulnerability, Severity
 from utils.logger import get_logger
 
 logger = get_logger("pdf_reporter")
 
 
 class PDFReportGenerator:
-    """Generates PDF security reports"""
-    
+    """Generates professional PDF security reports"""
+
     def __init__(self):
         self.styles = getSampleStyleSheet()
         self._setup_custom_styles()
-    
+        self.colors = {
+            'primary': colors.HexColor('#2c3e50'),
+            'secondary': colors.HexColor('#3498db'),
+            'success': colors.HexColor('#27ae60'),
+            'danger': colors.HexColor('#e74c3c'),
+            'warning': colors.HexColor('#f39c12'),
+            'info': colors.HexColor('#3498db'),
+            'light': colors.HexColor('#ecf0f1'),
+            'dark': colors.HexColor('#34495e'),
+        }
+
     def _setup_custom_styles(self):
         """Setup custom paragraph styles"""
-        # Title style
         self.styles.add(ParagraphStyle(
-            name='CustomTitle',
+            name='CoverTitle',
             parent=self.styles['Heading1'],
-            fontSize=24,
-            textColor=colors.HexColor('#1a1a1a'),
+            fontSize=36,
+            textColor=colors.HexColor('#2c3e50'),
             spaceAfter=30,
             alignment=TA_CENTER,
-            fontName='Helvetica-Bold'
+            fontName='Helvetica-Bold',
+            leading=42
         ))
-        
-        # Subtitle style
+
         self.styles.add(ParagraphStyle(
-            name='Subtitle',
+            name='CoverSubtitle',
             parent=self.styles['Normal'],
-            fontSize=12,
-            textColor=colors.HexColor('#666666'),
+            fontSize=18,
+            textColor=colors.HexColor('#7f8c8d'),
             spaceAfter=20,
-            alignment=TA_CENTER
+            alignment=TA_CENTER,
+            fontName='Helvetica'
         ))
-        
-        # Section header
+
         self.styles.add(ParagraphStyle(
             name='SectionHeader',
             parent=self.styles['Heading2'],
-            fontSize=16,
+            fontSize=18,
+            textColor=colors.HexColor('#2c3e50'),
+            spaceAfter=15,
+            spaceBefore=25,
+            fontName='Helvetica-Bold',
+            borderWidth=2,
+            borderColor=colors.HexColor('#3498db'),
+            borderPadding=5
+        ))
+
+        self.styles.add(ParagraphStyle(
+            name='Executive',
+            parent=self.styles['Normal'],
+            fontSize=11,
             textColor=colors.HexColor('#2c3e50'),
             spaceAfter=12,
-            spaceBefore=20,
-            fontName='Helvetica-Bold'
+            alignment=TA_JUSTIFY,
+            leading=16
         ))
-        
-        # Vulnerability title
+
         self.styles.add(ParagraphStyle(
             name='VulnTitle',
             parent=self.styles['Heading3'],
             fontSize=14,
             textColor=colors.HexColor('#2c3e50'),
-            spaceAfter=8,
-            fontName='Helvetica-Bold'
+            spaceAfter=10,
+            fontName='Helvetica-Bold',
+            leftIndent=20
         ))
-    
+
+        self.styles.add(ParagraphStyle(
+            name='BodyTextEnhanced',
+            parent=self.styles['Normal'],
+            fontSize=10,
+            textColor=colors.HexColor('#34495e'),
+            spaceAfter=10,
+            alignment=TA_JUSTIFY,
+            leading=14
+        ))
+
+    def _create_header_footer(self, canvas, doc):
+        """Add header and footer to each page"""
+        canvas.saveState()
+
+        canvas.setFont('Helvetica', 9)
+        canvas.setFillColor(colors.HexColor('#95a5a6'))
+        canvas.drawString(inch, letter[1] - 0.5 * inch, "MCP Security Scanner Report")
+        canvas.drawRightString(letter[0] - inch, letter[1] - 0.5 * inch,
+                               datetime.now().strftime('%Y-%m-%d'))
+
+        canvas.setStrokeColor(colors.HexColor('#3498db'))
+        canvas.setLineWidth(2)
+        canvas.line(inch, letter[1] - 0.6 * inch, letter[0] - inch, letter[1] - 0.6 * inch)
+
+        canvas.setFont('Helvetica', 8)
+        canvas.drawCentredString(letter[0] / 2, 0.5 * inch, f"Page {doc.page}")
+        canvas.drawRightString(letter[0] - inch, 0.5 * inch,
+                               "Confidential - For Internal Use Only")
+
+        canvas.restoreState()
+
     def generate(
         self,
         server_info: MCPServer,
         vulnerabilities: List[Vulnerability],
         output_path: str
     ) -> str:
-        """
-        Generate PDF report
-        
-        Args:
-            server_info: Scanned server information
-            vulnerabilities: List of vulnerabilities
-            output_path: Path to save PDF
-            
-        Returns:
-            Path to generated PDF
-        """
+        """Generate PDF report"""
         logger.info(f"Generating PDF report to {output_path}")
-        
-        # Create PDF document
+
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         doc = SimpleDocTemplate(
             str(output_file),
             pagesize=letter,
             rightMargin=72,
             leftMargin=72,
-            topMargin=72,
+            topMargin=90,
             bottomMargin=72
         )
-        
-        # Build content
+
         story = []
-        
-        # Add title page
-        story.extend(self._create_title_page(server_info))
+        story.extend(self._create_cover_page(server_info))
         story.append(PageBreak())
-        
-        # Add executive summary
         story.extend(self._create_executive_summary(server_info, vulnerabilities))
         story.append(PageBreak())
-        
-        # Add vulnerability details
-        story.extend(self._create_vulnerability_section(vulnerabilities))
-        
-        # Add footer
+        story.extend(self._create_findings(vulnerabilities))
+        story.append(PageBreak())
+        story.extend(self._create_recommendations())
         story.extend(self._create_footer())
-        
-        # Build PDF
-        doc.build(story)
-        
+
+        doc.build(story, onFirstPage=self._create_header_footer,
+                  onLaterPages=self._create_header_footer)
+
         logger.info(f"PDF report saved to {output_file}")
         return str(output_file)
-    
-    def _create_title_page(self, server: MCPServer) -> List:
-        """Create title page"""
+
+    def _create_cover_page(self, server: MCPServer) -> List:
+        """Create professional cover page"""
         elements = []
-        
-        # Add spacing from top
-        elements.append(Spacer(1, 2*inch))
-        
-        # Title
-        title = Paragraph(
-            "🔒 MCP Security Scan Report",
-            self.styles['CustomTitle']
-        )
-        elements.append(title)
-        elements.append(Spacer(1, 0.3*inch))
-        
-        # Subtitle
-        subtitle = Paragraph(
-            f"Security Assessment for {server.url}",
-            self.styles['Subtitle']
-        )
-        elements.append(subtitle)
-        elements.append(Spacer(1, 1*inch))
-        
-        # Server info table
-        server_data = [
+
+        elements.append(Spacer(1, 2 * inch))
+
+        elements.append(Paragraph("🔒", self.styles['CoverTitle']))
+        elements.append(Spacer(1, 0.3 * inch))
+
+        elements.append(Paragraph(
+            "<b>SECURITY ASSESSMENT REPORT</b>",
+            self.styles['CoverTitle']
+        ))
+        elements.append(Spacer(1, 0.2 * inch))
+
+        elements.append(Paragraph(
+            f"Model Context Protocol Server<br/>{server.url}",
+            self.styles['CoverSubtitle']
+        ))
+        elements.append(Spacer(1, 1 * inch))
+
+        info_data = [
+            ['Report Date:', datetime.now().strftime('%B %d, %Y')],
             ['Target Server:', server.url],
             ['Server Name:', server.name or 'Unknown'],
-            ['Port:', str(server.port)],
-            ['Protocol:', server.protocol.upper()],
-            ['Scan Date:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            ['Assessment Type:', 'Comprehensive Security Scan'],
+            ['Status:', 'CONFIDENTIAL'],
         ]
-        
-        server_table = Table(server_data, colWidths=[2*inch, 4*inch])
-        server_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+
+        info_table = Table(info_data, colWidths=[2 * inch, 4 * inch])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.colors['light']),
+            ('TEXTCOLOR', (0, 0), (0, -1), self.colors['dark']),
+            ('TEXTCOLOR', (1, 0), (1, -1), self.colors['primary']),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#2c3e50')),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('PADDING', (0, 0), (-1, -1), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOX', (0, 0), (-1, -1), 1, self.colors['secondary']),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.white),
         ]))
-        
-        elements.append(server_table)
-        
+
+        elements.append(info_table)
         return elements
-    
+
     def _create_executive_summary(
         self,
         server: MCPServer,
@@ -184,205 +221,198 @@ class PDFReportGenerator:
     ) -> List:
         """Create executive summary"""
         elements = []
-        
-        # Section header
-        header = Paragraph("Executive Summary", self.styles['SectionHeader'])
-        elements.append(header)
-        elements.append(Spacer(1, 0.2*inch))
-        
-        # Severity counts
-        severity_counts = {
-            'CRITICAL': 0,
-            'HIGH': 0,
-            'MEDIUM': 0,
-            'LOW': 0,
-            'INFO': 0
-        }
-        
+
+        elements.append(Paragraph("EXECUTIVE SUMMARY", self.styles['SectionHeader']))
+        elements.append(Spacer(1, 0.3 * inch))
+
+        elements.append(Paragraph(
+            f"This report presents the findings from a comprehensive security assessment "
+            f"of the Model Context Protocol (MCP) server deployed at <b>{server.url}</b>. "
+            f"The assessment identified <b>{len(vulnerabilities)} security issues</b> "
+            f"that require attention to ensure the confidentiality, integrity, and "
+            f"availability of the system.",
+            self.styles['Executive']
+        ))
+        elements.append(Spacer(1, 0.3 * inch))
+
+        severity_counts = {'CRITICAL': 0, 'HIGH': 0, 'MEDIUM': 0, 'LOW': 0, 'INFO': 0}
         for vuln in vulnerabilities:
             severity_counts[vuln.severity.value] += 1
-        
-        # Calculate risk score
+
         risk_score = min(sum([
             severity_counts['CRITICAL'] * 10,
             severity_counts['HIGH'] * 5,
             severity_counts['MEDIUM'] * 2,
             severity_counts['LOW'] * 1
         ]), 100)
-        
-        # Summary text
-        summary_text = f"""
-        This report presents the findings from a comprehensive security assessment of the MCP server 
-        at <b>{server.url}</b>. The scan identified <b>{len(vulnerabilities)} security issues</b> 
-        that require attention.
-        """
-        
-        summary = Paragraph(summary_text, self.styles['Normal'])
-        elements.append(summary)
-        elements.append(Spacer(1, 0.3*inch))
-        
-        # Risk score box
-        risk_color = colors.red if risk_score > 70 else colors.orange if risk_score > 40 else colors.green
-        risk_data = [[f'Overall Risk Score: {risk_score}/100']]
-        risk_table = Table(risk_data, colWidths=[6*inch])
+
+        if risk_score >= 70:
+            risk_level, risk_color = "HIGH RISK", self.colors['danger']
+        elif risk_score >= 40:
+            risk_level, risk_color = "MEDIUM RISK", self.colors['warning']
+        else:
+            risk_level, risk_color = "LOW RISK", self.colors['success']
+
+        risk_table = Table(
+            [[f'OVERALL RISK SCORE: {risk_score}/100\n{risk_level}']],
+            colWidths=[6.5 * inch]
+        )
         risk_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 16),
+            ('FONTSIZE', (0, 0), (-1, -1), 18),
             ('BACKGROUND', (0, 0), (-1, -1), risk_color),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('PADDING', (0, 0), (-1, -1), 20),
-            ('BOX', (0, 0), (-1, -1), 2, colors.black),
+            ('BOX', (0, 0), (-1, -1), 3, self.colors['dark']),
         ]))
         elements.append(risk_table)
-        elements.append(Spacer(1, 0.3*inch))
-        
-        # Severity breakdown table
-        severity_data = [
-            ['Severity', 'Count', 'Risk'],
-            ['Critical', str(severity_counts['CRITICAL']), '🔴 Immediate Action Required'],
-            ['High', str(severity_counts['HIGH']), '🟠 Important'],
-            ['Medium', str(severity_counts['MEDIUM']), '🟡 Should Address'],
-            ['Low', str(severity_counts['LOW']), '🔵 Minor'],
-            ['Info', str(severity_counts['INFO']), '🟢 Informational'],
+        elements.append(Spacer(1, 0.4 * inch))
+
+        vuln_data = [
+            ['SEVERITY', 'COUNT', 'RISK LEVEL', 'PRIORITY'],
+            ['Critical', str(severity_counts['CRITICAL']), '🔴 Immediate', 'P0 - Fix Now'],
+            ['High', str(severity_counts['HIGH']), '🟠 Urgent', 'P1 - This Week'],
+            ['Medium', str(severity_counts['MEDIUM']), '🟡 Important', 'P2 - This Month'],
+            ['Low', str(severity_counts['LOW']), '🔵 Minor', 'P3 - Backlog'],
+            ['Info', str(severity_counts['INFO']), '🟢 FYI', 'P4 - Optional'],
         ]
-        
-        severity_table = Table(severity_data, colWidths=[1.5*inch, 1*inch, 3.5*inch])
-        severity_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+
+        vuln_table = Table(vuln_data, colWidths=[1.5 * inch, 1 * inch, 2 * inch, 2 * inch])
+        vuln_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.colors['primary']),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('PADDING', (0, 0), (-1, -1), 8),
+            ('PADDING', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, self.colors['light']]),
         ]))
-        
-        elements.append(severity_table)
-        
+        elements.append(vuln_table)
+
         return elements
-    
-    def _create_vulnerability_section(self, vulnerabilities: List[Vulnerability]) -> List:
-        """Create detailed vulnerability section"""
+
+    def _create_findings(self, vulnerabilities: List[Vulnerability]) -> List:
+        """Create detailed findings section"""
         elements = []
-        
-        # Section header
-        header = Paragraph("Detailed Findings", self.styles['SectionHeader'])
-        elements.append(header)
-        elements.append(Spacer(1, 0.2*inch))
-        
-        # Sort by severity
+
+        elements.append(Paragraph("DETAILED FINDINGS", self.styles['SectionHeader']))
+        elements.append(Spacer(1, 0.2 * inch))
+
         severity_order = {
-            Severity.CRITICAL: 0,
-            Severity.HIGH: 1,
-            Severity.MEDIUM: 2,
-            Severity.LOW: 3,
-            Severity.INFO: 4
+            Severity.CRITICAL: 0, Severity.HIGH: 1,
+            Severity.MEDIUM: 2, Severity.LOW: 3, Severity.INFO: 4
         }
         sorted_vulns = sorted(vulnerabilities, key=lambda v: severity_order[v.severity])
-        
+
         for i, vuln in enumerate(sorted_vulns, 1):
-            vuln_elements = self._create_vulnerability_card(i, vuln)
-            elements.extend(vuln_elements)
-            
+            elements.extend(self._create_vulnerability_card(i, vuln))
             if i < len(sorted_vulns):
-                elements.append(Spacer(1, 0.3*inch))
-        
+                elements.append(Spacer(1, 0.3 * inch))
+
         return elements
-    
+
     def _create_vulnerability_card(self, num: int, vuln: Vulnerability) -> List:
         """Create a vulnerability card"""
-        elements = []
-        
-        # Severity color mapping
         severity_colors = {
-            Severity.CRITICAL: colors.HexColor('#d32f2f'),
-            Severity.HIGH: colors.HexColor('#f57c00'),
-            Severity.MEDIUM: colors.HexColor('#fbc02d'),
-            Severity.LOW: colors.HexColor('#1976d2'),
-            Severity.INFO: colors.HexColor('#388e3c')
+            Severity.CRITICAL: self.colors['danger'],
+            Severity.HIGH: colors.HexColor('#e67e22'),
+            Severity.MEDIUM: self.colors['warning'],
+            Severity.LOW: self.colors['info'],
+            Severity.INFO: self.colors['success']
         }
-        
         severity_color = severity_colors.get(vuln.severity, colors.grey)
-        
-        # Vulnerability header with severity badge
-        title_text = f"<b>{num}. {vuln.title}</b>"
-        title = Paragraph(title_text, self.styles['VulnTitle'])
-        
-        # Create card container
-        card_content = []
-        
-        # Metadata table
+
         meta_data = [
-            ['ID:', vuln.id],
-            ['Severity:', vuln.severity.value],
-            ['Category:', vuln.category],
+            ['ID:', vuln.id, 'Severity:', vuln.severity.value],
+            ['Category:', vuln.category, 'CWE:', vuln.cwe_id or 'N/A'],
         ]
-        
         if vuln.cvss_score:
-            meta_data.append(['CVSS Score:', f"{vuln.cvss_score}/10.0"])
-        if vuln.cwe_id:
-            meta_data.append(['CWE:', vuln.cwe_id])
-        
-        meta_table = Table(meta_data, colWidths=[1.5*inch, 4.5*inch])
+            meta_data.append(['CVSS Score:', f"{vuln.cvss_score}/10.0", '', ''])
+
+        meta_table = Table(meta_data, colWidths=[1 * inch, 2 * inch, 1 * inch, 2 * inch])
         meta_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('TEXTCOLOR', (0, 0), (0, -1), severity_color),
-            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-            ('PADDING', (0, 0), (-1, -1), 4),
+            ('TEXTCOLOR', (0, 0), (0, -1), self.colors['dark']),
+            ('TEXTCOLOR', (2, 0), (2, -1), self.colors['dark']),
+            ('TEXTCOLOR', (3, 0), (3, 0), severity_color),
+            ('PADDING', (0, 0), (-1, -1), 6),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
-        
-        # Description
-        desc = Paragraph(f"<b>Description:</b><br/>{vuln.description}", self.styles['Normal'])
-        
-        # Evidence
-        evidence_text = "<b>Evidence:</b><br/>" + "<br/>".join([f"• {e}" for e in vuln.evidence])
-        evidence = Paragraph(evidence_text, self.styles['Normal'])
-        
-        # Remediation
-        remediation_text = f"<b>Remediation:</b><br/>{vuln.remediation.replace(chr(10), '<br/>')}"
-        remediation = Paragraph(remediation_text, self.styles['Normal'])
-        
-        # Combine into a bordered box
-        elements.append(KeepTogether([
-            title,
-            Spacer(1, 0.1*inch),
+
+        evidence_items = "<br/>".join([f"• {e}" for e in vuln.evidence[:5]])
+
+        card_elements = [
+            Paragraph(f"<b>{num}. {vuln.title}</b>", self.styles['VulnTitle']),
+            Spacer(1, 0.1 * inch),
             meta_table,
-            Spacer(1, 0.1*inch),
-            desc,
-            Spacer(1, 0.1*inch),
-            evidence,
-            Spacer(1, 0.1*inch),
-            remediation
-        ]))
-        
+            Spacer(1, 0.15 * inch),
+            Paragraph(f"<b>Description:</b><br/>{vuln.description}", self.styles['BodyTextEnhanced']),
+            Spacer(1, 0.1 * inch),
+            Paragraph(f"<b>Evidence:</b><br/>{evidence_items}", self.styles['BodyTextEnhanced']),
+            Spacer(1, 0.1 * inch),
+            Paragraph(
+                f"<b>Remediation:</b><br/>{vuln.remediation.replace(chr(10), '<br/>')}",
+                self.styles['BodyTextEnhanced']
+            ),
+        ]
+
+        return [KeepTogether(card_elements)]
+
+    def _create_recommendations(self) -> List:
+        """Create recommendations section"""
+        elements = []
+
+        elements.append(Paragraph("RECOMMENDATIONS", self.styles['SectionHeader']))
+        elements.append(Spacer(1, 0.2 * inch))
+
+        elements.append(Paragraph(
+            "<b>Immediate Actions (Priority 0):</b><br/>"
+            "• Address all CRITICAL vulnerabilities within 24 hours<br/>"
+            "• Implement temporary mitigations if permanent fixes require time<br/>"
+            "• Notify security team and stakeholders<br/>"
+            "<br/>"
+            "<b>Short-term Actions (1-2 weeks):</b><br/>"
+            "• Resolve all HIGH severity issues<br/>"
+            "• Begin addressing MEDIUM severity vulnerabilities<br/>"
+            "• Implement monitoring and alerting<br/>"
+            "<br/>"
+            "<b>Long-term Actions (1-3 months):</b><br/>"
+            "• Address remaining MEDIUM and LOW severity issues<br/>"
+            "• Implement security best practices<br/>"
+            "• Schedule regular security assessments<br/>",
+            self.styles['BodyTextEnhanced']
+        ))
+
         return elements
-    
+
     def _create_footer(self) -> List:
         """Create report footer"""
         elements = []
-        
+
         elements.append(PageBreak())
-        elements.append(Spacer(1, 1*inch))
-        
-        footer_text = """
-        <b>Disclaimer:</b><br/>
-        This report is provided for informational purposes only. The findings represent 
-        potential security issues identified through automated scanning. Manual verification 
-        and testing are recommended before taking remediation actions.<br/><br/>
-        
-        <b>Report Generated by:</b> MCP Security Scanner v0.1.0<br/>
-        <b>Generated:</b> """ + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + """<br/><br/>
-        
-        For more information, visit: https://github.com/Latteflo/mpc-security-scanner
-        """
-        
-        footer = Paragraph(footer_text, self.styles['Normal'])
-        elements.append(footer)
-        
+        elements.append(Spacer(1, 1 * inch))
+
+        elements.append(Paragraph(
+            "<b>Disclaimer:</b><br/>"
+            "This report is provided for informational purposes only. The findings represent "
+            "potential security issues identified through automated scanning. Manual verification "
+            "is recommended before taking remediation actions.<br/><br/>"
+            f"<b>Report Generated by:</b> MCP Security Scanner v0.2.1<br/>"
+            f"<b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br/><br/>"
+            "<i>This document contains confidential information. "
+            "Unauthorized distribution is prohibited.</i>",
+            self.styles['BodyTextEnhanced']
+        ))
+
         return elements
+
+
+# Backward-compatibility alias
+EnhancedPDFReportGenerator = PDFReportGenerator

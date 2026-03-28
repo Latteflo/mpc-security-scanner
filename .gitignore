@@ -27,13 +27,17 @@ venv/
 ENV/
 env/
 
-# Testing
+# Testing & coverage
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
 .tox/
 .hypothesis/
-coverage.xml
+
+# Type checking & linting caches
+.mypy_cache/
+.ruff_cache/
 
 # IDEs
 .vscode/
@@ -41,23 +45,26 @@ coverage.xml
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+Thumbs.db
 
 # Nix
 result
 result-*
 .direnv/
 
-# Reports (keep structure, ignore generated files)
-reports/scans/*.json
-reports/scans/*.html
-reports/scans/*.pdf
-reports/scans/*.md
-reports/scans/*.docx
-reports/compliance/*.json
-reports/compliance/*.html
-reports/compliance/*.pdf
-reports/compliance/*.md
+# Generated reports — keep the directory structure, ignore outputs.
+# SARIF files may contain sensitive scan data and are large; upload them
+# as CI artifacts or to the GitHub Security tab instead of committing them.
+reports/scans/
+reports/compliance/
+reports/*.json
+reports/*.html
+reports/*.pdf
+reports/*.md
+reports/*.sarif
 !reports/.gitkeep
 !reports/demos/
 !reports/demos/.gitkeep
@@ -65,36 +72,31 @@ reports/compliance/*.md
 !reports/demos/*.html
 !reports/demos/*.md
 
+# Baseline files produced by --save-baseline (may contain internal host info)
+*.baseline.json
+baselines/
+
 # Logs
 *.log
 logs/
 
-# Config with secrets
-config/secrets.yaml
-config/production.yaml
+# Claude Code configuration — personal, not for the repo
+CLAUDE.md
+
+# Secrets / environment
 .env
 .env.local
+.env.*.local
+config/secrets.yaml
+config/production.yaml
 
-# Backups
+# Backups created during development
 *_backup.*
 *_old.*
 *.bak
 *.backup
 
-# OS
-Thumbs.db
-.DS_Store
-
-# Compiled files
-*.pyc
-*.pyo
-
-# Database
+# Databases
 *.db
 *.sqlite
 *.sqlite3
-
-# Node (for dashboard)
-dashboard/*/node_modules/
-dashboard/*/dist/
-dashboard/*/build/

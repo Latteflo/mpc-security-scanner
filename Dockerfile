@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 LABEL maintainer="your.email@example.com"
-LABEL version="0.1.0"
+LABEL version="0.2.1"
 
 # Create user
 RUN useradd -m -u 1000 scanner && \

@@ -1,0 +1,27 @@
+FROM python:3.11-slim
+
+LABEL maintainer="test@example.com"
+LABEL description="Vulnerable MCP test server for scanner testing"
+
+# Create user
+RUN useradd -m -u 1000 testserver
+
+WORKDIR /app
+
+# Install MCP and dependencies
+RUN pip install --no-cache-dir \
+    mcp>=1.17.0 \
+    aiohttp>=3.9.0
+
+# Copy vulnerable server
+COPY examples/vulnerable_server.py .
+
+USER testserver
+
+EXPOSE 3000
+
+# Health check endpoint (basic)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
+    CMD python -c "import socket; s = socket.socket(); s.connect(('localhost', 3000)); s.close()" || exit 1
+
+CMD ["python", "vulnerable_server.py"]

@@ -260,6 +260,60 @@ class ComplianceMapper:
                     NIST_800_53_CONTROLS["CM-7"],
                 ],
             },
+
+            # ── AI-Specific Checks ─────────────────────────────────────────────
+
+            # Tool Description Poisoning (MCP-AI-001)
+            # Maps to input validation and application security controls because
+            # the description field is an untrusted string that reaches the model.
+            "MCP-AI-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.DS-5"],   # Protections against data leaks
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                    NIST_800_53_CONTROLS["SI-3"],   # Malicious code protection
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1059"],  # Command and scripting interpreter
+                ],
+            },
+
+            # Over-Permissive Tool Input Schema (MCP-AI-002)
+            "MCP-AI-002": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.IP-1"],   # Baseline configuration
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                ],
+            },
+
+            # Indirect Prompt Injection Risk (MCP-AI-003)
+            "MCP-AI-003": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.13.1.1"],  # Network controls
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.DS-5"],   # Protections against data leaks
+                    NIST_CSF_CONTROLS["DE.CM-1"],   # Network monitoring
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                    NIST_800_53_CONTROLS["SC-8"],   # Transmission confidentiality
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1190"],  # Exploit public-facing application
+                ],
+            },
         }
     
     def get_controls(

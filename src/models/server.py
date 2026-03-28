@@ -23,8 +23,21 @@ class MCPServer(BaseModel):
     description: Optional[str] = Field(default=None, description="Server description")
     
     # Capabilities
-    tools: List[str] = Field(default_factory=list, description="Available tools")
+    tools: List[str] = Field(default_factory=list, description="Available tool names")
     resources: List[str] = Field(default_factory=list, description="Available resources")
+
+    # Full tool metadata — populated by discovery when the server returns them.
+    # tool_schemas maps tool_name → JSON Schema dict (the inputSchema field from
+    # tools/list). tool_descriptions maps tool_name → human-readable description.
+    # Both are empty when the server doesn't return metadata (older servers).
+    tool_schemas: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="inputSchema per tool from tools/list response",
+    )
+    tool_descriptions: Dict[str, str] = Field(
+        default_factory=dict,
+        description="description per tool from tools/list response",
+    )
     
     # Security posture
     has_authentication: bool = Field(default=False, description="Has authentication")

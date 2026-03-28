@@ -16,6 +16,7 @@ from utils.logger import get_logger
 from checks.cors import check_cors_misconfiguration
 from checks.rate_limiting import check_rate_limiting
 from checks.injection import check_sql_injection, check_command_injection, check_path_traversal
+from checks.ai_specific import check_tool_poisoning, check_overpermissive_schema, check_indirect_injection_risk
 from compliance.mapper import ComplianceMapper
 
 console = Console()
@@ -51,6 +52,10 @@ class SecurityAnalyzer:
         await self._check_cors(server)
         await self._check_rate_limiting(server)
         await self._check_injection_attacks(server)
+        # AI-specific checks — these require tool metadata (schemas + descriptions)
+        # which discovery now extracts. On servers that don't return metadata the
+        # checks return None cleanly without producing false positives.
+        await self._check_ai_specific(server)
         
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()
@@ -71,6 +76,14 @@ class SecurityAnalyzer:
         
         logger.debug(f"Added compliance mappings to {len(self.vulnerabilities)} vulnerabilities")
     
+    async def _check_ai_specific(self, server: MCPServer):
+        """Check for AI-specific vulnerabilities: tool poisoning, schema issues, indirect injection."""
+        for check_fn in (check_tool_poisoning, check_overpermissive_schema, check_indirect_injection_risk):
+            vuln = await check_fn(server)
+            if vuln:
+                self.vulnerabilities.append(vuln)
+                logger.warning(f"Found: {vuln.title}")
+
     async def _check_injection_attacks(self, server: MCPServer):
         """Check for injection vulnerabilities"""
         sql_vuln = await check_sql_injection(server)

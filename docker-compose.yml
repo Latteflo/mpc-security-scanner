@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # MCP Security Scanner
+  scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mcp-security-scanner:latest
+    container_name: mcp-scanner
+    volumes:
+      - ./reports:/app/reports
+      - ./config:/app/config
+    environment:
+      - LOG_LEVEL=INFO
+      - SCANNER_TIMEOUT=30
+    networks:
+      - scanner-network
+    stdin_open: true
+    tty: true
+
+  # Example vulnerable MCP server for testing
+  test-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-server
+    container_name: mcp-test-server
+    ports:
+      - "3000:3000"
+    networks:
+      - scanner-network
+    environment:
+      - MCP_PORT=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  scanner-network:
+    driver: bridge
+
+volumes:
+  reports:
+  config:

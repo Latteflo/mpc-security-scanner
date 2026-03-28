@@ -39,7 +39,7 @@ echo ""
 run_test "Core scanner imports" "python -c 'from src.scanner import MCPDiscovery, SecurityAnalyzer, ReportGenerator'"
 run_test "Network scanner import" "python -c 'from src.scanner import NetworkScanner, scan_network_for_mcp'"
 run_test "Plugin system import" "python -c 'from src.scanner import PluginManager, SecurityCheckPlugin'"
-run_test "Enhanced PDF reporter import" "python -c 'from src.scanner.pdf_reporter_enhanced import EnhancedPDFReportGenerator'"
+run_test "PDF reporter import" "python -c 'from src.scanner.pdf_reporter import PDFReportGenerator'"
 run_test "Word reporter import" "python -c 'from src.scanner.word_reporter import WordReportGenerator'"
 run_test "Interactive mode import" "python -c 'import sys; sys.path.insert(0, \"src\"); import interactive'"
 
@@ -89,14 +89,14 @@ async def test_reports():
     await reporter.generate(server, vulns, "reports/test.html", "html")
     print("✓ HTML report generated")
     
-    # Enhanced PDF
+    # PDF
     try:
-        from src.scanner.pdf_reporter_enhanced import EnhancedPDFReportGenerator
-        pdf_gen = EnhancedPDFReportGenerator()
-        pdf_gen.generate(server, vulns, "reports/test_enhanced.pdf")
-        print("✓ Enhanced PDF report generated")
+        from src.scanner.pdf_reporter import PDFReportGenerator
+        pdf_gen = PDFReportGenerator()
+        pdf_gen.generate(server, vulns, "reports/test.pdf")
+        print("✓ PDF report generated")
     except Exception as e:
-        print(f"⚠ Enhanced PDF: {e}")
+        print(f"⚠ PDF: {e}")
     
     # Word
     try:

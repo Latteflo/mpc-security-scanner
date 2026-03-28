@@ -5,8 +5,30 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mcp-security-scanner"
 version = "0.2.1"
-description = "Security auditing tool for Model Context Protocol servers"
+description = "Security auditing tool for Model Context Protocol (MCP) servers"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
+keywords = ["mcp", "security", "scanner", "llm", "ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# The CLI entry point.  After `pip install mcp-security-scanner` the command
+# `mcp-security-scanner` invokes src/main.py:main() directly.
+# package-dir maps "" (root namespace) → src/, so the module is just "main".
+[project.scripts]
+mcp-security-scanner = "main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
