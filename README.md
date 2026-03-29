@@ -1,9 +1,9 @@
 # MCP Security Scanner
 
-[![Tests](https://github.com/Latteflo/mcp-security-scanner/workflows/Tests/badge.svg)](https://github.com/Latteflo/mcp-security-scanner/actions)
+[![Tests](https://github.com/Latteflo/mpc-security-scanner/workflows/Tests/badge.svg)](https://github.com/Latteflo/mpc-security-scanner/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/Latteflo/mcp-security-scanner/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/Latteflo/mpc-security-scanner/releases)
 
 Security auditing tool for [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers. Detects authentication gaps, injection risks, AI-specific attack vectors (tool poisoning, indirect prompt injection), and maps findings to compliance frameworks.
 
@@ -300,4 +300,4 @@ For authorized security testing only. Always obtain permission before scanning s
 
 ---
 
-[Issues](https://github.com/Latteflo/mcp-security-scanner/issues) · [Releases](https://github.com/Latteflo/mcp-security-scanner/releases) · [License: MIT](LICENSE)
+[Issues](https://github.com/Latteflo/mpc-security-scanner/issues) · [Releases](https://github.com/Latteflo/mpc-security-scanner/releases) · [License: MIT](LICENSE)
