@@ -235,6 +235,21 @@
   .ctrl-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
   .ctrl-triggered { font-size: 11px; color: #be123c; margin-top: 4px; font-weight: 600; }
 
+  /* ── Charts ── */
+  .donut-legend { display: flex; flex-direction: column; gap: 7px; }
+  .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .donut-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .donut-legend-label { color: #475569; flex: 1; }
+  .donut-legend-count { font-weight: 700; color: #1a1d2e; }
+  .cat-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .cat-bar-label { font-size: 12px; color: #475569; width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+  .cat-bar-track { flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+  .cat-bar-count { font-size: 12px; font-weight: 700; color: #1a1d2e; width: 24px; text-align: right; flex-shrink: 0; }
+  @media (max-width: 640px) {
+    #charts-grid { grid-template-columns: 1fr !important; }
+  }
+
   /* ── History section ── */
   .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .history-table th {
@@ -463,6 +478,20 @@
           <div class="summary-card sc-risk">
             <div class="count" id="cnt-risk">0</div>
             <div class="label">Risk Score</div>
+          </div>
+        </div>
+
+        <!-- ── Charts row ── -->
+        <div class="card" id="charts-card">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;" id="charts-grid">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Severity Distribution</div>
+              <div id="chart-donut" style="display:flex;align-items:center;gap:20px;"></div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Findings by Category</div>
+              <div id="chart-categories"></div>
+            </div>
           </div>
         </div>
 
@@ -753,6 +782,8 @@ function renderResults(event) {
 
   renderFindings(event.vulnerabilities);
   renderCompliance(event.compliance_report);
+  renderDonut(event.vulnerabilities);
+  renderCategoryBars(event.vulnerabilities);
 }
 
 const SORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
@@ -851,6 +882,15 @@ function renderCompliance(complianceReport) {
     pane.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">No compliance data available.</div>';
     return;
   }
+
+  // ── Compliance overview chart ─────────────────────────────────────────────
+  const overviewWrap = document.createElement('div');
+  overviewWrap.style.cssText = 'margin-bottom:24px;';
+  overviewWrap.innerHTML = `
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:12px;">Framework Scores</div>
+    <div id="compliance-overview-chart"></div>`;
+  pane.appendChild(overviewWrap);
+  renderComplianceOverview(complianceReport);
 
   // ── Framework selector pills ──────────────────────────────────────────────
   const pillBar = document.createElement('div');
@@ -1030,6 +1070,137 @@ function escHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+
+const SEV_COLORS = {
+  CRITICAL: '#be123c',
+  HIGH:     '#c2410c',
+  MEDIUM:   '#d97706',
+  LOW:      '#1d4ed8',
+  INFO:     '#059669',
+};
+
+function polarXY(cx, cy, r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+function donutPath(cx, cy, r, ri, a0, a1) {
+  const [x1, y1] = polarXY(cx, cy, r,  a0);
+  const [x2, y2] = polarXY(cx, cy, r,  a1);
+  const [x3, y3] = polarXY(cx, cy, ri, a1);
+  const [x4, y4] = polarXY(cx, cy, ri, a0);
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${large} 0 ${x4} ${y4}Z`;
+}
+
+function renderDonut(vulns) {
+  const el = document.getElementById('chart-donut');
+  if (!el) return;
+
+  const counts = {};
+  SORDER.forEach(s => counts[s] = 0);
+  vulns.forEach(v => { if (counts[v.severity] !== undefined) counts[v.severity]++; });
+  const total = vulns.length;
+
+  const cx = 70, cy = 70, r = 60, ri = 38;
+  let angle = 0;
+  const slices = [];
+
+  SORDER.forEach(sev => {
+    const n = counts[sev];
+    if (n === 0) return;
+    const sweep = (n / total) * 360;
+    slices.push({ sev, n, a0: angle, a1: angle + sweep - 1 });
+    angle += sweep;
+  });
+
+  // If all one severity, draw a full ring
+  if (slices.length === 1) {
+    slices[0].a1 = slices[0].a0 + 359.9;
+  }
+
+  const paths = slices.map(s =>
+    `<path d="${donutPath(cx, cy, r, ri, s.a0, s.a1)}" fill="${SEV_COLORS[s.sev]}" opacity="0.9"/>`
+  ).join('');
+
+  const svg = `<svg width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0;">
+    ${total === 0
+      ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="${r - ri}"/>`
+      : paths}
+    <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="22" font-weight="800" fill="#1a1d2e">${total}</text>
+    <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-size="11" fill="#94a3b8">findings</text>
+  </svg>`;
+
+  const legend = SORDER
+    .filter(s => counts[s] > 0)
+    .map(s => `
+      <div class="donut-legend-item">
+        <div class="donut-legend-dot" style="background:${SEV_COLORS[s]}"></div>
+        <span class="donut-legend-label">${s}</span>
+        <span class="donut-legend-count">${counts[s]}</span>
+      </div>`)
+    .join('');
+
+  el.innerHTML = svg + `<div class="donut-legend">${legend}</div>`;
+}
+
+function renderCategoryBars(vulns) {
+  const el = document.getElementById('chart-categories');
+  if (!el) return;
+
+  const cats = {};
+  vulns.forEach(v => {
+    const c = v.category || 'Other';
+    if (!cats[c]) cats[c] = { total: 0, topSev: 'INFO' };
+    cats[c].total++;
+    // Track highest severity for bar colour
+    const sevOrder = ['CRITICAL','HIGH','MEDIUM','LOW','INFO'];
+    if (sevOrder.indexOf(v.severity) < sevOrder.indexOf(cats[c].topSev)) {
+      cats[c].topSev = v.severity;
+    }
+  });
+
+  if (Object.keys(cats).length === 0) {
+    el.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:20px 0;">No findings.</div>';
+    return;
+  }
+
+  const sorted = Object.entries(cats).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
+  const max = sorted[0][1].total;
+
+  el.innerHTML = sorted.map(([cat, data]) => `
+    <div class="cat-bar-row">
+      <div class="cat-bar-label" title="${escHtml(cat)}">${escHtml(cat)}</div>
+      <div class="cat-bar-track">
+        <div class="cat-bar-fill" style="width:${Math.round(data.total/max*100)}%;background:${SEV_COLORS[data.topSev]};opacity:.85;"></div>
+      </div>
+      <div class="cat-bar-count">${data.total}</div>
+    </div>`).join('');
+}
+
+function renderComplianceOverview(complianceReport) {
+  if (!complianceReport || Object.keys(complianceReport).length === 0) return;
+  const el = document.getElementById('compliance-overview-chart');
+  if (!el) return;
+
+  const rows = Object.entries(complianceReport).map(([fw, d]) => {
+    const cls = d.score >= 70 ? '#059669' : d.score >= 40 ? '#d97706' : '#be123c';
+    return `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="font-weight:600;color:#475569;">${escHtml(FW_LABELS[fw] || fw)}</span>
+          <span style="font-weight:800;color:${cls};">${d.score}%</span>
+        </div>
+        <div style="height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${d.score}%;background:${cls};border-radius:4px;transition:width .5s ease;"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = rows;
 }
 
 // ── History ───────────────────────────────────────────────────────────────────
