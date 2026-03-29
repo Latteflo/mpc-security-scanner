@@ -11,7 +11,7 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 
 ## Features
 
-### Security Checks (25 total)
+### Security Checks (28 total)
 
 | Check | ID | Severity |
 |-------|----|----------|
@@ -40,6 +40,9 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 | **Protocol version not enforced** | **MCP-PROTO-001** | **LOW** |
 | **Resource URI path traversal** | **MCP-RES-001** | **CRITICAL** |
 | **Confused deputy / tool chaining** | **MCP-AI-005** | **HIGH** |
+| **XML External Entity (XXE)** | **MCP-INJ-007** | **CRITICAL** |
+| **ReDoS via schema regex** | **MCP-DOS-002** | **HIGH** |
+| **OAuth scope bypass** | **MCP-OAUTH-001** | **HIGH** |
 
 ### Transport Support
 - HTTP/HTTPS JSON-RPC 2.0

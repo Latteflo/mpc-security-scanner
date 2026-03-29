@@ -29,6 +29,9 @@ from checks.tool_dos import check_tool_dos
 from checks.protocol_version import check_protocol_version
 from checks.resource_traversal import check_resource_traversal
 from checks.confused_deputy import check_confused_deputy
+from checks.xxe import check_xxe
+from checks.redos import check_redos
+from checks.oauth_scope import check_oauth_scope
 from compliance.mapper import ComplianceMapper
 
 console = Console()
@@ -79,6 +82,9 @@ class SecurityAnalyzer:
         await self._check_protocol_version(server)
         await self._check_resource_traversal(server)
         await self._check_confused_deputy(server)
+        await self._check_xxe(server)
+        await self._check_redos(server)
+        await self._check_oauth_scope(server)
 
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()
@@ -179,6 +185,27 @@ class SecurityAnalyzer:
     async def _check_confused_deputy(self, server: MCPServer):
         """Check for confused deputy / tool chaining abuse risk."""
         vuln = await check_confused_deputy(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_xxe(self, server: MCPServer):
+        """Check for XML External Entity injection in tools that accept XML."""
+        vuln = await check_xxe(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_redos(self, server: MCPServer):
+        """Check for ReDoS via regex patterns in tool JSON Schemas."""
+        vuln = await check_redos(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_oauth_scope(self, server: MCPServer):
+        """Check for insufficient OAuth 2.0 scope enforcement."""
+        vuln = await check_oauth_scope(server)
         if vuln:
             self.vulnerabilities.append(vuln)
             logger.warning(f"Found: {vuln.title}")

@@ -444,6 +444,67 @@ class ComplianceMapper:
                 ],
             },
 
+            # XXE Injection (MCP-INJ-007)
+            "MCP-INJ-007": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                    NIST_800_53_CONTROLS["SC-8"],   # Transmission confidentiality
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1190"],  # Exploit public-facing application
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["6.5.1"],
+                ],
+            },
+
+            # ReDoS (MCP-DOS-002)
+            "MCP-DOS-002": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.12.2.1"],  # Controls against malware
+                    ISO27001_CONTROLS["A.17.2.1"],  # Availability
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["DE.AE-5"],   # Incident alert thresholds
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SC-5"],   # Denial of service protection
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1499"],  # Endpoint denial of service
+                ],
+            },
+
+            # OAuth Scope (MCP-OAUTH-001)
+            "MCP-OAUTH-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.9.4.1"],   # Information access restriction
+                    ISO27001_CONTROLS["A.9.2.1"],   # User registration
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.AC-1"],   # Identity and credential management
+                    NIST_CSF_CONTROLS["PR.AC-7"],   # User authentication
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["AC-3"],   # Access enforcement
+                    NIST_800_53_CONTROLS["IA-2"],   # Identification and authentication
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1078"],  # Valid accounts
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["8.2"],
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.1"],
+                ],
+            },
+
             # Protocol Version Not Enforced (MCP-PROTO-001)
             "MCP-PROTO-001": {
                 ComplianceFramework.ISO27001: [
