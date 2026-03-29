@@ -3,7 +3,7 @@
 [![Tests](https://github.com/Latteflo/mcp-security-scanner/workflows/Tests/badge.svg)](https://github.com/Latteflo/mcp-security-scanner/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.2.1-green.svg)](https://github.com/Latteflo/mcp-security-scanner/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/Latteflo/mcp-security-scanner/releases)
 
 Security auditing tool for [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers. Detects authentication gaps, injection risks, AI-specific attack vectors (tool poisoning, indirect prompt injection), and maps findings to compliance frameworks.
 
@@ -11,38 +11,37 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 
 ## Features
 
-### Security Checks (28 total)
+### Security Checks (27 total)
 
-| Check | ID | Severity |
-|-------|----|----------|
-| Missing authentication | MCP-AUTH-001 | CRITICAL |
-| Unencrypted transport | MCP-CRYPTO-001 | HIGH |
-| CORS misconfiguration | MCP-CORS-001 | HIGH/CRITICAL |
-| No rate limiting | MCP-RATE-001 | HIGH |
-| SQL injection | MCP-INJ-001 | CRITICAL |
-| Command injection | MCP-INJ-003 | CRITICAL |
-| Path traversal | MCP-INJ-005 | CRITICAL |
-| Sensitive tool exposure | MCP-AUTHZ-001 | varies |
-| Insecure configuration | MCP-CONFIG-001/002 | LOW/INFO |
-| **Tool poisoning** | **MCP-AI-001** | **HIGH/CRITICAL** |
-| **Over-permissive schema** | **MCP-AI-002** | **MEDIUM** |
-| **Indirect prompt injection** | **MCP-AI-003** | **MEDIUM/HIGH** |
-| **System prompt leakage** | **MCP-AI-004** | **MEDIUM/HIGH** |
-| **SSRF via tool parameters** | **MCP-SSRF-001** | **HIGH/CRITICAL** |
-| **Weak TLS protocol** | **MCP-TLS-001** | **HIGH** |
-| **TLS certificate issues** | **MCP-TLS-002** | **HIGH** |
-| **Missing security headers** | **MCP-HDR-001** | **LOW** |
-| **Verbose error disclosure** | **MCP-ERR-001** | **MEDIUM** |
-| **Debug endpoint exposure** | **MCP-DEBUG-001** | **MEDIUM/HIGH** |
-| **JWT authentication bypass** | **MCP-JWT-001** | **HIGH/CRITICAL** |
-| **Dangerous capability exposure** | **MCP-CAP-001** | **MEDIUM/HIGH** |
-| **Unbounded tool output** | **MCP-DOS-001** | **MEDIUM/HIGH** |
-| **Protocol version not enforced** | **MCP-PROTO-001** | **LOW** |
-| **Resource URI path traversal** | **MCP-RES-001** | **CRITICAL** |
-| **Confused deputy / tool chaining** | **MCP-AI-005** | **HIGH** |
-| **XML External Entity (XXE)** | **MCP-INJ-007** | **CRITICAL** |
-| **ReDoS via schema regex** | **MCP-DOS-002** | **HIGH** |
-| **OAuth scope bypass** | **MCP-OAUTH-001** | **HIGH** |
+| ID | Check | Severity |
+|----|-------|----------|
+| MCP-AUTH-001 | Missing authentication | CRITICAL |
+| MCP-CRYPTO-001 | Unencrypted transport | HIGH |
+| MCP-CORS-001 | CORS misconfiguration | HIGH |
+| MCP-RATE-001 | No rate limiting | HIGH |
+| MCP-INJ-001 | SQL injection | CRITICAL |
+| MCP-INJ-003 | Command injection | CRITICAL |
+| MCP-INJ-005 | Path traversal | CRITICAL |
+| MCP-INJ-007 | XML External Entity (XXE) | CRITICAL |
+| MCP-AUTHZ-001 | Sensitive tool exposure | CRITICAL |
+| MCP-CONFIG-001 | Default port in use | LOW |
+| MCP-INFO-001 | Version disclosure | INFO |
+| MCP-AI-001 | Tool description poisoning | HIGH |
+| MCP-AI-002 | Over-permissive tool schema | MEDIUM |
+| MCP-AI-003 | Indirect prompt injection | HIGH |
+| MCP-AI-004 | System prompt leakage | HIGH |
+| MCP-AI-005 | Confused deputy / tool chaining | HIGH |
+| MCP-SSRF-001 | SSRF via tool parameters | HIGH |
+| MCP-HDR-001 | Missing security headers | LOW |
+| MCP-ERR-001 | Verbose error disclosure | MEDIUM |
+| MCP-DEBUG-001 | Debug endpoint exposure | MEDIUM |
+| MCP-JWT-001 | JWT authentication bypass (alg:none) | CRITICAL |
+| MCP-CAP-001 | Dangerous capability exposure | HIGH |
+| MCP-DOS-001 | Unbounded tool output | MEDIUM |
+| MCP-DOS-002 | ReDoS via schema regex | HIGH |
+| MCP-PROTO-001 | Protocol version not enforced | LOW |
+| MCP-RES-001 | Resource URI path traversal | CRITICAL |
+| MCP-OAUTH-001 | OAuth scope bypass | HIGH |
 
 ### Transport Support
 - HTTP/HTTPS JSON-RPC 2.0
@@ -53,7 +52,7 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 - JSON
 - HTML
 - PDF
-- **SARIF 2.1.0** — consumed by GitHub Security tab and VS Code Problems pane
+- SARIF 2.1.0 — consumed by GitHub Security tab and VS Code Problems pane
 
 ### Compliance Frameworks
 Every finding is automatically mapped to applicable controls across:
@@ -73,7 +72,7 @@ pip install mcp-security-scanner
 mcp-security-scanner serve
 ```
 
-Opens `http://localhost:8080` in your browser automatically. From there:
+Opens `http://localhost:8080` automatically. From there:
 - Enter a target URL and pick a compliance framework
 - Watch findings stream in live as each check runs
 - Expand any finding for description, remediation steps, evidence, and mapped compliance controls
@@ -146,6 +145,11 @@ mcp-security-scanner compliance --target http://localhost:3000 --framework ISO27
 mcp-security-scanner frameworks
 ```
 
+### List all checks
+```bash
+mcp-security-scanner checks
+```
+
 ### Exit codes (for CI/CD)
 | Code | Meaning |
 |------|---------|
@@ -153,6 +157,56 @@ mcp-security-scanner frameworks
 | 1 | HIGH severity findings present |
 | 2 | CRITICAL severity findings present |
 | 3 | Could not connect to target |
+
+## Testing the Scanner
+
+The repo ships an intentionally vulnerable MCP server that triggers all 27 checks. Use it to verify the scanner works or to develop new checks.
+
+> **Warning:** This server contains real security vulnerabilities by design. Run it only in an isolated environment — never expose it to the internet.
+
+### Start the test server
+```bash
+# Default port 3000 (triggers MCP-CONFIG-001 as well)
+python examples/vulnerable_server_http.py
+
+# Custom port
+MCP_PORT=3001 python examples/vulnerable_server_http.py
+```
+
+### Run the scanner against it
+```bash
+# All 27 checks should fire
+python src/main.py scan --target http://localhost:3000
+
+# Expected output
+# ┌──────────┬───────┐
+# │ Severity │ Count │
+# ├──────────┼───────┤
+# │ CRITICAL │     8 │
+# │ HIGH     │    11 │
+# │ MEDIUM   │     4 │
+# │ LOW      │     3 │
+# │ INFO     │     1 │
+# └──────────┴───────┘
+```
+
+### What the test server covers
+
+| Vulnerability | How it's implemented |
+|---------------|----------------------|
+| No auth | Any request is accepted without credentials |
+| JWT alg:none | `WWW-Authenticate: Bearer` advertised; server accepts tokens with `alg: none` |
+| OAuth scope bypass | Write tools accessible with read-only or empty-scope tokens |
+| CORS wildcard | `Access-Control-Allow-Origin: *` on all responses |
+| Command injection | `execute_command` tool runs `id && <user_input>` via shell |
+| Path traversal | `read_file` tool reads any path including `/etc/passwd` |
+| SQL injection | `query_database` leaks MySQL error messages |
+| XXE | `parse_xml` uses Python's default XML parser (entity expansion enabled) |
+| SSRF | `fetch_url` makes outbound HTTP requests to any URL |
+| ReDoS | `validate_input` schema uses `([a-zA-Z]+)+$` — catastrophic backtracking |
+| Tool poisoning | `helpful_assistant` description contains `IGNORE PREVIOUS INSTRUCTIONS` |
+| Confused deputy | `search_web` (read) + `send_email` (write) exposed with no auth |
+| Debug endpoints | `/debug`, `/metrics`, `/swagger.json`, `/docs` open with no auth |
 
 ## CI/CD Integration
 
@@ -193,24 +247,38 @@ Findings appear inline on pull requests in the GitHub Security tab without any e
 
 ## Testing
 ```bash
-pytest -v                          # all 76 tests
-pytest tests/test_checks/ -v       # check-level tests only
-pytest --cov=src --cov-report=html # with coverage
+python -m pytest -v                          # all 125 tests
+python -m pytest tests/test_checks/ -v      # check-level tests only
+python -m pytest --cov=src --cov-report=html # with coverage
 ```
 
 ## Architecture
 
 ```
 src/
-├── main.py              # Click CLI: scan, compliance, frameworks subcommands
+├── main.py              # Click CLI: scan, compliance, frameworks, checks subcommands
 ├── checks/
-│   ├── ai_specific.py   # MCP-AI-001/002/003 (tool poisoning, schema, injection)
-│   ├── cors.py
-│   ├── injection.py
-│   └── rate_limiting.py
+│   ├── ai_specific.py   # MCP-AI-001/002/003/004 (tool poisoning, schema, injection, leakage)
+│   ├── cors.py          # MCP-CORS-001
+│   ├── injection.py     # MCP-INJ-001/003/005
+│   ├── rate_limiting.py # MCP-RATE-001
+│   ├── ssrf.py          # MCP-SSRF-001
+│   ├── tls.py           # MCP-TLS-001/002
+│   ├── headers.py       # MCP-HDR-001
+│   ├── error_disclosure.py   # MCP-ERR-001
+│   ├── debug_endpoints.py    # MCP-DEBUG-001
+│   ├── jwt_auth.py      # MCP-JWT-001
+│   ├── capability_exposure.py # MCP-CAP-001
+│   ├── tool_dos.py      # MCP-DOS-001
+│   ├── protocol_version.py   # MCP-PROTO-001
+│   ├── resource_traversal.py # MCP-RES-001
+│   ├── confused_deputy.py    # MCP-AI-005
+│   ├── xxe.py           # MCP-INJ-007
+│   ├── redos.py         # MCP-DOS-002
+│   └── oauth_scope.py   # MCP-OAUTH-001
 ├── scanner/
 │   ├── discovery.py     # HTTP + SSE transport detection, full tool schema extraction
-│   ├── analyzer.py      # Orchestrates all checks
+│   ├── analyzer.py      # Orchestrates all 27 checks
 │   ├── reporter.py      # JSON / HTML / SARIF / terminal output
 │   └── pdf_reporter.py
 ├── compliance/
@@ -220,8 +288,10 @@ src/
 ├── web/
 │   ├── app.py           # FastAPI backend: scan lifecycle, SSE, report download
 │   └── static/
-│       └── index.html   # Self-contained SPA (no CDN, works offline)
+│       └── index.html   # Self-contained SPA (no CDN, works offline, mobile-responsive)
 └── models/              # MCPServer, Vulnerability, ScanReport
+examples/
+└── vulnerable_server_http.py  # Intentionally vulnerable server for testing all 27 checks
 ```
 
 ## Disclaimer
