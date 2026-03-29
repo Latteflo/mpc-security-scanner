@@ -1067,10 +1067,15 @@ function renderRecentScans(scans) {
 
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;';
+    const recentFwLabel = scan.framework ? (FW_LABELS[scan.framework] || scan.framework) : null;
+    const recentFwTag = recentFwLabel
+      ? `<span style="font-size:10px;font-weight:700;padding:2px 6px;background:#eef2ff;color:#4338ca;border-radius:3px;">${escHtml(recentFwLabel)}</span>`
+      : '';
+
     row.innerHTML = `
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;font-size:13px;color:#1a1d2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(scan.target)}">${escHtml(scan.target)}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${escHtml(dateStr)} at ${escHtml(timeStr)}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;display:flex;align-items:center;gap:6px;">${escHtml(dateStr)} at ${escHtml(timeStr)}${recentFwTag ? ' · ' + recentFwTag : ''}</div>
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">${badges || '<span style="font-size:12px;color:#059669;font-weight:600;">✓ Clean</span>'}</div>
       <button class="btn btn-secondary" style="padding:5px 12px;font-size:12px;flex-shrink:0;">View</button>
@@ -1110,6 +1115,7 @@ function renderHistory(scans) {
       <tr>
         <th>Target</th>
         <th>Date &amp; Time</th>
+        <th>Framework</th>
         <th>Findings</th>
         <th>Risk Score</th>
         <th>Status</th>
@@ -1141,9 +1147,15 @@ function renderHistory(scans) {
       ? `<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="restoreFromHistory('${escHtml(scan.scan_id)}');event.stopPropagation()">View</button>`
       : `<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;opacity:.4" disabled>View</button>`;
 
+    const fwLabel = scan.framework ? (FW_LABELS[scan.framework] || scan.framework) : null;
+    const fwCell = fwLabel
+      ? `<span style="font-size:11px;font-weight:700;padding:3px 8px;background:#eef2ff;color:#4338ca;border-radius:4px;">${escHtml(fwLabel)}</span>`
+      : `<span style="font-size:12px;color:#94a3b8;">None</span>`;
+
     tr.innerHTML = `
       <td><div class="history-target" title="${escHtml(scan.target)}">${escHtml(scan.target)}</div></td>
       <td><div class="history-time">${escHtml(dateStr)}<br><span style="color:#94a3b8">${escHtml(timeStr)}</span></div></td>
+      <td>${fwCell}</td>
       <td>
         <div style="font-size:13px;font-weight:700;margin-bottom:4px;">${totalFindings} finding${totalFindings !== 1 ? 's' : ''}</div>
         <div class="history-counts">${badges || '<span style="color:#94a3b8;font-size:12px;">—</span>'}</div>

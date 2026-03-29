@@ -405,6 +405,7 @@ def create_app() -> FastAPI:
             scans.append({
                 "scan_id": state.scan_id,
                 "target": state.target,
+                "framework": state.framework,
                 "status": state.status,
                 "created_at": state.created_at.isoformat() + "Z",
                 "severity_counts": state.severity_counts,
