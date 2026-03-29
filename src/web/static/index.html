@@ -458,51 +458,49 @@
 
       <!-- ── Results ── -->
       <div id="section-results" class="hidden">
-        <div class="summary-row">
-          <div class="summary-card sc-critical">
-            <div class="count" id="cnt-critical">0</div>
-            <div class="label">Critical</div>
-          </div>
-          <div class="summary-card sc-high">
-            <div class="count" id="cnt-high">0</div>
-            <div class="label">High</div>
-          </div>
-          <div class="summary-card sc-medium">
-            <div class="count" id="cnt-medium">0</div>
-            <div class="label">Medium</div>
-          </div>
-          <div class="summary-card sc-low">
-            <div class="count" id="cnt-low">0</div>
-            <div class="label">Low</div>
-          </div>
-          <div class="summary-card sc-risk">
-            <div class="count" id="cnt-risk">0</div>
-            <div class="label">Risk Score</div>
-          </div>
-        </div>
-
-        <!-- ── Charts row ── -->
-        <div class="card" id="charts-card">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;" id="charts-grid">
-            <div>
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Severity Distribution</div>
-              <div id="chart-donut" style="display:flex;align-items:center;gap:20px;"></div>
-            </div>
-            <div>
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Findings by Category</div>
-              <div id="chart-categories"></div>
-            </div>
-          </div>
-        </div>
-
         <div class="card">
           <div class="findings-tabs">
-            <button class="tab-btn active" id="tab-findings"    onclick="switchTab('findings')">Findings</button>
-            <button class="tab-btn"        id="tab-compliance"  onclick="switchTab('compliance')">Compliance</button>
+            <button class="tab-btn active" id="tab-findings"   onclick="switchTab('findings')">Findings</button>
+            <button class="tab-btn"        id="tab-compliance" onclick="switchTab('compliance')">Compliance</button>
           </div>
 
-          <div id="pane-findings"></div>
-          <div id="pane-compliance" class="hidden"></div>
+          <!-- ── Findings pane ── -->
+          <div id="pane-findings">
+            <!-- Severity count cards -->
+            <div class="summary-row" style="margin-bottom:20px;">
+              <div class="summary-card sc-critical"><div class="count" id="cnt-critical">0</div><div class="label">Critical</div></div>
+              <div class="summary-card sc-high">    <div class="count" id="cnt-high">0</div>    <div class="label">High</div></div>
+              <div class="summary-card sc-medium">  <div class="count" id="cnt-medium">0</div>  <div class="label">Medium</div></div>
+              <div class="summary-card sc-low">     <div class="count" id="cnt-low">0</div>     <div class="label">Low</div></div>
+              <div class="summary-card sc-risk">    <div class="count" id="cnt-risk">0</div>    <div class="label">Risk Score</div></div>
+            </div>
+            <!-- Charts -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:24px;" id="charts-grid">
+              <div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Severity Distribution</div>
+                <div id="chart-donut" style="display:flex;align-items:center;gap:20px;"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Findings by Category</div>
+                <div id="chart-categories"></div>
+              </div>
+            </div>
+            <!-- Finding list injected here -->
+            <div id="findings-list"></div>
+          </div>
+
+          <!-- ── Compliance pane ── -->
+          <div id="pane-compliance" class="hidden">
+            <!-- Framework score cards -->
+            <div id="fw-score-cards" style="margin-bottom:24px;"></div>
+            <!-- Framework scores bar chart -->
+            <div style="margin-bottom:24px;">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:12px;">Coverage Overview</div>
+              <div id="compliance-overview-chart"></div>
+            </div>
+            <!-- Framework pills + detail -->
+            <div id="fw-detail"></div>
+          </div>
         </div>
       </div>
 
@@ -790,7 +788,7 @@ const SORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
 const SCLASS = { CRITICAL: 'sg-critical', HIGH: 'sg-high', MEDIUM: 'sg-medium', LOW: 'sg-low', INFO: 'sg-info' };
 
 function renderFindings(vulns) {
-  const pane = document.getElementById('pane-findings');
+  const pane = document.getElementById('findings-list');
   pane.innerHTML = '';
 
   if (vulns.length === 0) {
@@ -875,28 +873,46 @@ let _activeFw = null;           // currently selected framework pill
 
 function renderCompliance(complianceReport) {
   _complianceReport = complianceReport;
-  const pane = document.getElementById('pane-compliance');
-  pane.innerHTML = '';
 
   if (!complianceReport || Object.keys(complianceReport).length === 0) {
-    pane.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">No compliance data available.</div>';
+    document.getElementById('fw-score-cards').innerHTML =
+      '<div style="text-align:center;padding:40px;color:#64748b;">No compliance data available.</div>';
     return;
   }
 
-  // ── Compliance overview chart ─────────────────────────────────────────────
-  const overviewWrap = document.createElement('div');
-  overviewWrap.style.cssText = 'margin-bottom:24px;';
-  overviewWrap.innerHTML = `
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:12px;">Framework Scores</div>
-    <div id="compliance-overview-chart"></div>`;
-  pane.appendChild(overviewWrap);
+  // ── Framework score cards (top row) ──────────────────────────────────────
+  const scoreCardsEl = document.getElementById('fw-score-cards');
+  scoreCardsEl.innerHTML = '';
+  const scoreGrid = document.createElement('div');
+  scoreGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;';
+
+  Object.entries(complianceReport).forEach(([fw, d]) => {
+    const col = d.score >= 70 ? '#059669' : d.score >= 40 ? '#d97706' : '#be123c';
+    const bg  = d.score >= 70 ? '#f0fdf4' : d.score >= 40 ? '#fffbeb' : '#fff1f2';
+    const bdr = d.score >= 70 ? '#bbf7d0' : d.score >= 40 ? '#fde68a' : '#fecdd3';
+    const card = document.createElement('div');
+    card.style.cssText = `background:${bg};border:1px solid ${bdr};border-radius:10px;padding:14px 12px;text-align:center;cursor:pointer;transition:box-shadow .15s;`;
+    card.innerHTML = `
+      <div style="font-size:26px;font-weight:800;color:${col};line-height:1;">${d.score}%</div>
+      <div style="font-size:10px;font-weight:700;color:${col};margin-top:4px;text-transform:uppercase;letter-spacing:.4px;">${escHtml(FW_LABELS[fw] || fw)}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">${d.failing} failing · ${d.passing} passing</div>`;
+    card.onclick = () => { switchTab('compliance'); selectFramework(fw); };
+    card.onmouseenter = () => card.style.boxShadow = '0 2px 8px rgba(0,0,0,.1)';
+    card.onmouseleave = () => card.style.boxShadow = '';
+    scoreGrid.appendChild(card);
+  });
+  scoreCardsEl.appendChild(scoreGrid);
+
+  // ── Coverage overview bar chart ───────────────────────────────────────────
   renderComplianceOverview(complianceReport);
 
-  // ── Framework selector pills ──────────────────────────────────────────────
+  // ── Framework selector pills + detail ────────────────────────────────────
+  const detailEl = document.getElementById('fw-detail');
+  detailEl.innerHTML = '';
+
   const pillBar = document.createElement('div');
   pillBar.className = 'fw-pills';
   pillBar.id = 'fw-pill-bar';
-
   Object.keys(complianceReport).forEach((fw, i) => {
     const d = complianceReport[fw];
     const pill = document.createElement('button');
@@ -906,14 +922,12 @@ function renderCompliance(complianceReport) {
     pill.onclick = () => selectFramework(fw);
     pillBar.appendChild(pill);
   });
-  pane.appendChild(pillBar);
+  detailEl.appendChild(pillBar);
 
-  // ── Content area (re-rendered on pill click) ──────────────────────────────
   const contentArea = document.createElement('div');
   contentArea.id = 'fw-content';
-  pane.appendChild(contentArea);
+  detailEl.appendChild(contentArea);
 
-  // Show first framework by default
   const firstFw = Object.keys(complianceReport)[0];
   _activeFw = firstFw;
   renderFrameworkDetail(firstFw);
@@ -935,24 +949,14 @@ function renderFrameworkDetail(fw) {
   const d = _complianceReport[fw];
   if (!d) return;
 
-  // ── Score bar ─────────────────────────────────────────────────────────────
-  const scoreClass = d.score >= 70 ? 'good' : d.score >= 40 ? 'medium' : 'bad';
+  // ── Summary line ──────────────────────────────────────────────────────────
   const wrap = document.createElement('div');
-  wrap.className = 'score-bar-wrap';
-  wrap.innerHTML = `
-    <div class="score-header">
-      <span class="score-pct ${scoreClass}">${d.score}%</span>
-      <span class="score-label">compliant — ${d.passing} of ${d.passing + d.failing} covered controls passing</span>
-    </div>
-    <div class="score-bar">
-      <div class="score-fill ${scoreClass}" style="width:${d.score}%"></div>
-    </div>
-    <div class="score-stats">
-      <span class="score-stat-passing">✓ ${d.passing} passing</span>
-      <span class="score-stat-failing">✗ ${d.failing} failing</span>
-      <span class="score-stat-not-covered">— ${d.not_covered} not covered by scanner</span>
-    </div>
-  `;
+  wrap.style.cssText = 'margin:12px 0 16px;';
+  wrap.innerHTML = `<div class="score-stats">
+    <span class="score-stat-passing">✓ ${d.passing} passing</span>
+    <span class="score-stat-failing">✗ ${d.failing} failing</span>
+    <span class="score-stat-not-covered">— ${d.not_covered} not covered by scanner</span>
+  </div>`;
   area.appendChild(wrap);
 
   // ── Failing controls ──────────────────────────────────────────────────────
