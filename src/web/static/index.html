@@ -107,6 +107,12 @@
   .phase-connector { flex: 1; height: 2px; background: #e2e8f0; margin: 0 8px; }
   .phase-connector.done { background: #059669; }
 
+  .progress-bar-wrap { margin: 0 0 20px; }
+  .progress-bar-track { height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .progress-bar-fill  { height: 100%; width: 0%; background: #7c83f7; border-radius: 4px; transition: width .35s ease; }
+  .progress-bar-meta  { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: #64748b; }
+  .progress-bar-meta .check-name { max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   .progress-log {
     background: #0f1117; border-radius: 8px; padding: 16px;
     font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
@@ -461,6 +467,17 @@
             </div>
           </div>
 
+          <!-- Progress bar -->
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+            <div class="progress-bar-meta">
+              <span class="check-name" id="progress-bar-check">Waiting…</span>
+              <span id="progress-bar-pct">0 / 27</span>
+            </div>
+          </div>
+
           <!-- Live log -->
           <div class="progress-log" id="progress-log">
             <span class="log-dim">Waiting for scan to start…</span>
@@ -618,7 +635,7 @@ function showSection(name) {
   if (nav) nav.classList.add('active');
 
   document.getElementById('topbar-title').textContent = SECTIONS[name] || name;
-  document.getElementById('topbar-export').classList.toggle('hidden', name !== 'results');
+  document.getElementById('topbar-export').classList.toggle('hidden', name !== 'results' && name !== 'compliance');
   currentSection = name;
   closeSidebar();
 
@@ -731,8 +748,15 @@ function markPhaseDone(phase) {
 }
 
 function handleProgress(event) {
-  const pct = Math.round((event.checks_done / event.checks_total) * 100);
-  let msg = `[${event.checks_done}/${event.checks_total}] ${event.latest_check} — ${pct}%`;
+  const total = event.checks_total || 27;
+  const done  = event.checks_done  || 0;
+  const pct   = Math.round((done / total) * 100);
+
+  document.getElementById('progress-bar-fill').style.width = pct + '%';
+  document.getElementById('progress-bar-check').textContent = event.latest_check || '';
+  document.getElementById('progress-bar-pct').textContent   = `${done} / ${total}`;
+
+  let msg = `[${done}/${total}] ${event.latest_check} — ${pct}%`;
   if (event.latest_finding) {
     msg += ` → <span class="log-warn">⚠ ${event.latest_finding}</span>`;
   } else {
@@ -784,11 +808,12 @@ function handleComplete(event) {
   logLine('log-ok', '✓  Scan complete in ' + event.duration_seconds.toFixed(1) + 's — ' +
     event.vulnerabilities.length + ' finding(s)');
 
+  document.getElementById('progress-bar-fill').style.width  = '100%';
+  document.getElementById('progress-bar-check').textContent = 'Complete';
   loadHistory();
   setTimeout(() => {
     renderResults(event);
-    showSectionDirect('results');
-    document.getElementById('nav-results').classList.add('active');
+    showSection('results');
     document.getElementById('topbar-badge').textContent = event.vulnerabilities.length + ' finding(s)';
   }, 800);
 }
@@ -1088,6 +1113,9 @@ function resetToScan() {
 function resetProgress() {
   document.getElementById('progress-log').innerHTML = '<span class="log-dim">Starting…</span>';
   document.getElementById('server-info-card').classList.add('hidden');
+  document.getElementById('progress-bar-fill').style.width  = '0%';
+  document.getElementById('progress-bar-check').textContent = 'Connecting…';
+  document.getElementById('progress-bar-pct').textContent   = '0 / 27';
   PHASE_ORDER.forEach(p => {
     const dot = document.getElementById('dot-' + p);
     if (dot) { dot.classList.remove('active', 'done'); }
