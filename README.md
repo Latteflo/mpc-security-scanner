@@ -72,8 +72,8 @@ Every finding is automatically mapped to applicable controls across:
 The easiest way to use the scanner — no CLI knowledge required:
 
 ```bash
-pip install mcp-security-scanner
-mcp-security-scanner serve
+pip install mcp-scanner
+mcp-scanner serve
 ```
 
 Opens `http://localhost:8080` automatically.
@@ -88,8 +88,8 @@ Opens `http://localhost:8080` automatically.
 - Export in any format (JSON / HTML / PDF / SARIF) from the toolbar at the top or bottom of the page
 
 ```bash
-mcp-security-scanner serve --port 9090   # custom port
-mcp-security-scanner serve --no-browser  # headless / server use
+mcp-scanner serve --port 9090   # custom port
+mcp-scanner serve --no-browser  # headless / server use
 ```
 
 ---
@@ -98,8 +98,8 @@ mcp-security-scanner serve --no-browser  # headless / server use
 
 ### pip (recommended)
 ```bash
-pip install mcp-security-scanner
-mcp-security-scanner scan --target http://localhost:3000
+pip install mcp-scanner
+mcp-scanner scan --target http://localhost:3000
 ```
 
 ### From source
@@ -123,42 +123,42 @@ make build && make demo
 ### Scan
 ```bash
 # Basic scan — terminal output
-mcp-security-scanner scan --target http://localhost:3000
+mcp-scanner scan --target http://localhost:3000
 
 # Save SARIF for GitHub Security tab
-mcp-security-scanner scan --target http://localhost:3000 --format sarif --output results.sarif
+mcp-scanner scan --target http://localhost:3000 --format sarif --output results.sarif
 
 # HTML report
-mcp-security-scanner scan --target http://localhost:3000 --format html --output report.html
+mcp-scanner scan --target http://localhost:3000 --format html --output report.html
 
 # Scan an SSE endpoint (Claude Desktop / VS Code)
-mcp-security-scanner scan --target http://localhost:3000/sse
+mcp-scanner scan --target http://localhost:3000/sse
 ```
 
 ### Baseline / diff mode
 ```bash
 # Save current findings as a baseline
-mcp-security-scanner scan --target http://localhost:3000 --save-baseline baseline.json
+mcp-scanner scan --target http://localhost:3000 --save-baseline baseline.json
 
 # Future scans only report NEW findings not in the baseline
-mcp-security-scanner scan --target http://localhost:3000 --baseline baseline.json
+mcp-scanner scan --target http://localhost:3000 --baseline baseline.json
 ```
 
 ### Compliance
 ```bash
 # Full compliance assessment across all frameworks
-mcp-security-scanner compliance --target http://localhost:3000
+mcp-scanner compliance --target http://localhost:3000
 
 # Single framework
-mcp-security-scanner compliance --target http://localhost:3000 --framework ISO27001
+mcp-scanner compliance --target http://localhost:3000 --framework ISO27001
 
 # List all supported frameworks and their controls
-mcp-security-scanner frameworks
+mcp-scanner frameworks
 ```
 
 ### List all checks
 ```bash
-mcp-security-scanner checks
+mcp-scanner checks
 ```
 
 ### Exit codes (for CI/CD)
@@ -238,9 +238,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install mcp-security-scanner
+      - run: pip install mcp-scanner
       - run: |
-          mcp-security-scanner scan \
+          mcp-scanner scan \
             --target ${{ secrets.MCP_SERVER_URL }} \
             --format sarif \
             --output results.sarif
@@ -255,7 +255,7 @@ Findings appear inline on pull requests in the GitHub Security tab.
 ### Fail the build on critical findings
 ```yaml
       - run: |
-          mcp-security-scanner scan --target ${{ secrets.MCP_SERVER_URL }}
+          mcp-scanner scan --target ${{ secrets.MCP_SERVER_URL }}
           # exits 2 if CRITICAL, 1 if HIGH, 0 if clean
 ```
 
