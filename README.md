@@ -9,6 +9,8 @@ Security auditing tool for [Model Context Protocol](https://modelcontextprotocol
 
 Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF output.
 
+---
+
 ## Features
 
 ### Security Checks (27 total)
@@ -45,13 +47,13 @@ Usable as a **web dashboard**, a **CLI**, or in **CI/CD pipelines** via SARIF ou
 
 ### Transport Support
 - HTTP/HTTPS JSON-RPC 2.0
-- SSE (Server-Sent Events) — the transport used by Claude Desktop and VS Code MCP integrations
+- SSE (Server-Sent Events) — used by Claude Desktop and VS Code MCP integrations
 
 ### Report Formats
 - Terminal (default)
 - JSON
 - HTML
-- PDF
+- PDF — A4, cover page, executive summary, remediation plan
 - SARIF 2.1.0 — consumed by GitHub Security tab and VS Code Problems pane
 
 ### Compliance Frameworks
@@ -63,6 +65,8 @@ Every finding is automatically mapped to applicable controls across:
 - PCI DSS 3.2.1
 - SOC 2 Type II
 
+---
+
 ## Web Dashboard
 
 The easiest way to use the scanner — no CLI knowledge required:
@@ -72,18 +76,23 @@ pip install mcp-security-scanner
 mcp-security-scanner serve
 ```
 
-Opens `http://localhost:8080` automatically. From there:
+Opens `http://localhost:8080` automatically.
+
+**What you get:**
 - Enter a target URL and pick a compliance framework
-- Watch findings stream in live as each check runs
-- Expand any finding for description, remediation steps, evidence, and mapped compliance controls
-- Switch to the **Compliance** tab for a per-framework score, gap analysis, and control breakdown
-- Download the report (JSON / HTML / PDF / SARIF)
-- Fully responsive — works on mobile and tablet
+- Live progress bar tracking each of the 27 checks as they run
+- Findings stream in real time — expand any finding for description, evidence, remediation, and compliance controls
+- **Results** — severity summary cards, donut chart, category bar chart, full findings list
+- **Compliance** — per-framework score cards, coverage overview, control-level breakdown
+- **History** — every past scan with target, date, framework, findings count, and risk score
+- Export in any format (JSON / HTML / PDF / SARIF) from the toolbar at the top or bottom of the page
 
 ```bash
 mcp-security-scanner serve --port 9090   # custom port
 mcp-security-scanner serve --no-browser  # headless / server use
 ```
+
+---
 
 ## Installation
 
@@ -96,7 +105,7 @@ mcp-security-scanner scan --target http://localhost:3000
 ### From source
 ```bash
 git clone https://github.com/Latteflo/mcp-scanner.git
-cd mcp-security-scanner
+cd mcp-scanner
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python src/main.py scan --target http://localhost:3000
@@ -106,6 +115,8 @@ python src/main.py scan --target http://localhost:3000
 ```bash
 make build && make demo
 ```
+
+---
 
 ## CLI Usage
 
@@ -129,7 +140,7 @@ mcp-security-scanner scan --target http://localhost:3000/sse
 # Save current findings as a baseline
 mcp-security-scanner scan --target http://localhost:3000 --save-baseline baseline.json
 
-# Future scans only show NEW findings not in the baseline
+# Future scans only report NEW findings not in the baseline
 mcp-security-scanner scan --target http://localhost:3000 --baseline baseline.json
 ```
 
@@ -158,15 +169,17 @@ mcp-security-scanner checks
 | 2 | CRITICAL severity findings present |
 | 3 | Could not connect to target |
 
+---
+
 ## Testing the Scanner
 
 The repo ships an intentionally vulnerable MCP server that triggers all 27 checks. Use it to verify the scanner works or to develop new checks.
 
-> **Warning:** This server contains real security vulnerabilities by design. Run it only in an isolated environment — never expose it to the internet.
+> **Warning:** This server contains real vulnerabilities by design. Run it only in an isolated environment — never expose it to the internet.
 
 ### Start the test server
 ```bash
-# Default port 3000 (triggers MCP-CONFIG-001 as well)
+# Default port 3000 (also triggers MCP-CONFIG-001)
 python examples/vulnerable_server_http.py
 
 # Custom port
@@ -175,7 +188,6 @@ MCP_PORT=3001 python examples/vulnerable_server_http.py
 
 ### Run the scanner against it
 ```bash
-# All 27 checks should fire
 python src/main.py scan --target http://localhost:3000
 
 # Expected output
@@ -194,19 +206,21 @@ python src/main.py scan --target http://localhost:3000
 
 | Vulnerability | How it's implemented |
 |---------------|----------------------|
-| No auth | Any request is accepted without credentials |
+| No auth | Any request accepted without credentials |
 | JWT alg:none | `WWW-Authenticate: Bearer` advertised; server accepts tokens with `alg: none` |
 | OAuth scope bypass | Write tools accessible with read-only or empty-scope tokens |
 | CORS wildcard | `Access-Control-Allow-Origin: *` on all responses |
 | Command injection | `execute_command` tool runs `id && <user_input>` via shell |
 | Path traversal | `read_file` tool reads any path including `/etc/passwd` |
-| SQL injection | `query_database` leaks MySQL error messages |
+| SQL injection | `query_database` leaks database error messages |
 | XXE | `parse_xml` uses Python's default XML parser (entity expansion enabled) |
 | SSRF | `fetch_url` makes outbound HTTP requests to any URL |
 | ReDoS | `validate_input` schema uses `([a-zA-Z]+)+$` — catastrophic backtracking |
 | Tool poisoning | `helpful_assistant` description contains `IGNORE PREVIOUS INSTRUCTIONS` |
 | Confused deputy | `search_web` (read) + `send_email` (write) exposed with no auth |
-| Debug endpoints | `/debug`, `/metrics`, `/swagger.json`, `/docs` open with no auth |
+| Debug endpoints | `/debug`, `/metrics`, `/swagger.json`, `/docs` unauthenticated |
+
+---
 
 ## CI/CD Integration
 
@@ -236,7 +250,7 @@ jobs:
           sarif_file: results.sarif
 ```
 
-Findings appear inline on pull requests in the GitHub Security tab without any extra tooling.
+Findings appear inline on pull requests in the GitHub Security tab.
 
 ### Fail the build on critical findings
 ```yaml
@@ -245,54 +259,60 @@ Findings appear inline on pull requests in the GitHub Security tab without any e
           # exits 2 if CRITICAL, 1 if HIGH, 0 if clean
 ```
 
+---
+
 ## Testing
 ```bash
-python -m pytest -v                          # all 125 tests
-python -m pytest tests/test_checks/ -v      # check-level tests only
-python -m pytest --cov=src --cov-report=html # with coverage
+python -m pytest -v                           # all 125 tests
+python -m pytest tests/test_checks/ -v       # check-level tests only
+python -m pytest --cov=src --cov-report=html  # with coverage
 ```
+
+---
 
 ## Architecture
 
 ```
-src/
-├── main.py              # Click CLI: scan, compliance, frameworks, checks subcommands
-├── checks/
-│   ├── ai_specific.py   # MCP-AI-001/002/003/004 (tool poisoning, schema, injection, leakage)
-│   ├── cors.py          # MCP-CORS-001
-│   ├── injection.py     # MCP-INJ-001/003/005
-│   ├── rate_limiting.py # MCP-RATE-001
-│   ├── ssrf.py          # MCP-SSRF-001
-│   ├── tls.py           # MCP-TLS-001/002
-│   ├── headers.py       # MCP-HDR-001
-│   ├── error_disclosure.py   # MCP-ERR-001
-│   ├── debug_endpoints.py    # MCP-DEBUG-001
-│   ├── jwt_auth.py      # MCP-JWT-001
-│   ├── capability_exposure.py # MCP-CAP-001
-│   ├── tool_dos.py      # MCP-DOS-001
-│   ├── protocol_version.py   # MCP-PROTO-001
-│   ├── resource_traversal.py # MCP-RES-001
-│   ├── confused_deputy.py    # MCP-AI-005
-│   ├── xxe.py           # MCP-INJ-007
-│   ├── redos.py         # MCP-DOS-002
-│   └── oauth_scope.py   # MCP-OAUTH-001
-├── scanner/
-│   ├── discovery.py     # HTTP + SSE transport detection, full tool schema extraction
-│   ├── analyzer.py      # Orchestrates all 27 checks
-│   ├── reporter.py      # JSON / HTML / SARIF / terminal output
-│   └── pdf_reporter.py
-├── compliance/
-│   ├── frameworks.py    # 50+ controls across 6 frameworks
-│   ├── mapper.py        # Vulnerability → framework control mapping
-│   └── reporter.py      # Compliance-specific report formats
-├── web/
-│   ├── app.py           # FastAPI backend: scan lifecycle, SSE, report download
-│   └── static/
-│       └── index.html   # Self-contained SPA (no CDN, works offline, mobile-responsive)
-└── models/              # MCPServer, Vulnerability, ScanReport
-examples/
-└── vulnerable_server_http.py  # Intentionally vulnerable server for testing all 27 checks
+mcp-scanner/
+├── .github/
+│   ├── CONTRIBUTING.md
+│   ├── SECURITY.md
+│   ├── ISSUE_TEMPLATE/
+│   └── workflows/          # CI: tests, code quality, security scan
+├── docker/
+│   ├── Dockerfile
+│   ├── Dockerfile.test-server
+│   └── docker-compose.yml
+├── docs/
+│   ├── CHANGELOG.md
+│   ├── API.md
+│   ├── COMPLIANCE.md
+│   └── USAGE.md
+├── examples/
+│   └── vulnerable_server_http.py  # Intentionally vulnerable server (all 27 checks)
+├── plugins/
+│   └── example_headers_check.py   # Custom check plugin example
+├── src/
+│   ├── main.py              # Click CLI: scan, compliance, frameworks, checks
+│   ├── checks/              # 19 check modules (one per vulnerability class)
+│   ├── scanner/
+│   │   ├── discovery.py     # HTTP + SSE transport detection, tool schema extraction
+│   │   ├── analyzer.py      # Orchestrates all 27 checks
+│   │   ├── reporter.py      # JSON / HTML / SARIF / terminal output
+│   │   └── pdf_reporter.py  # PDF: A4 layout, cover, exec summary, remediation plan
+│   ├── compliance/
+│   │   ├── frameworks.py    # 50+ controls across 6 frameworks
+│   │   ├── mapper.py        # Vulnerability → framework control mapping
+│   │   └── reporter.py      # Compliance report formats
+│   ├── web/
+│   │   ├── app.py           # FastAPI backend: SSE streaming, scan lifecycle, export
+│   │   └── static/
+│   │       └── index.html   # Self-contained SPA — no CDN, works offline
+│   └── models/              # MCPServer, Vulnerability, ScanReport
+└── tests/                   # 125 tests across checks, compliance, models, scanner
 ```
+
+---
 
 ## Disclaimer
 
@@ -300,4 +320,4 @@ For authorized security testing only. Always obtain permission before scanning s
 
 ---
 
-[Issues](https://github.com/Latteflo/mcp-scanner/issues) · [Releases](https://github.com/Latteflo/mcp-scanner/releases) · [License: MIT](LICENSE)
+[Issues](https://github.com/Latteflo/mcp-scanner/issues) · [Changelog](docs/CHANGELOG.md) · [License: MIT](LICENSE)
