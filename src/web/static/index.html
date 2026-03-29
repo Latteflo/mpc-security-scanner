@@ -391,10 +391,12 @@
           </div>
         </div>
 
-        <div class="card" style="border-style:dashed; text-align:center; color:#94a3b8; padding:40px;">
-          <div style="font-size:36px; margin-bottom:12px;">⬡</div>
-          <div style="font-size:15px; font-weight:600; margin-bottom:6px;">No scan results yet</div>
-          <div style="font-size:13px;">Enter a target URL above and click Run Scan to begin.</div>
+        <div id="recent-scans-card" class="card hidden">
+          <h3 style="display:flex;align-items:center;justify-content:space-between;">
+            Recent Scans
+            <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;font-weight:600" onclick="showSection('history')">View all →</button>
+          </h3>
+          <div id="recent-scans-list"></div>
         </div>
       </div>
 
@@ -552,6 +554,7 @@ function showSection(name) {
   closeSidebar();
 
   if (name === 'history') loadHistory();
+  if (name === 'scan') loadHistory();
 }
 
 function switchTab(name) {
@@ -724,8 +727,8 @@ function handleComplete(event) {
   logLine('log-ok', '✓  Scan complete in ' + event.duration_seconds.toFixed(1) + 's — ' +
     event.vulnerabilities.length + ' finding(s)');
 
-  // Switch to results view after a brief pause so the user sees the complete log
-  loadHistory();  // refresh history list in background
+  // Refresh history and recent-scans in background
+  loadHistory();
   setTimeout(() => {
     renderResults(event);
     showSectionDirect('results');
@@ -1035,9 +1038,50 @@ async function loadHistory() {
     const res = await fetch('/api/scans');
     const data = await res.json();
     renderHistory(data.scans);
+    renderRecentScans(data.scans);
   } catch (e) {
     console.warn('Could not load scan history:', e);
   }
+}
+
+function renderRecentScans(scans) {
+  const card = document.getElementById('recent-scans-card');
+  const list = document.getElementById('recent-scans-list');
+  if (!card || !list) return;
+
+  const completed = (scans || []).filter(s => s.status === 'complete').slice(0, 3);
+  if (completed.length === 0) { card.classList.add('hidden'); return; }
+
+  card.classList.remove('hidden');
+  list.innerHTML = '';
+
+  completed.forEach(scan => {
+    const dt = new Date(scan.created_at);
+    const dateStr = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    const counts = scan.severity_counts || {};
+    const badges = ['CRITICAL','HIGH','MEDIUM','LOW']
+      .filter(s => counts[s] > 0)
+      .map(s => `<span class="sev-badge sev-badge-${s.toLowerCase()}">${counts[s]} ${s}</span>`)
+      .join('');
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;';
+    row.innerHTML = `
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;color:#1a1d2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(scan.target)}">${escHtml(scan.target)}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${escHtml(dateStr)} at ${escHtml(timeStr)}</div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">${badges || '<span style="font-size:12px;color:#059669;font-weight:600;">✓ Clean</span>'}</div>
+      <button class="btn btn-secondary" style="padding:5px 12px;font-size:12px;flex-shrink:0;">View</button>
+    `;
+    row.querySelector('.btn').onclick = (e) => { e.stopPropagation(); restoreFromHistory(scan.scan_id); };
+    row.onclick = () => restoreFromHistory(scan.scan_id);
+    list.appendChild(row);
+  });
+
+  // Remove border from last row
+  if (list.lastChild) list.lastChild.style.borderBottom = 'none';
 }
 
 function renderHistory(scans) {
