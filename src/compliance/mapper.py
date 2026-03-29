@@ -444,6 +444,61 @@ class ComplianceMapper:
                 ],
             },
 
+            # Protocol Version Not Enforced (MCP-PROTO-001)
+            "MCP-PROTO-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.IP-1"],   # Baseline configuration
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                    NIST_800_53_CONTROLS["CM-7"],   # Least functionality
+                ],
+            },
+
+            # Resource URI Path Traversal (MCP-RES-001)
+            "MCP-RES-001": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.9.4.1"],   # Information access restriction
+                    ISO27001_CONTROLS["A.14.2.5"],  # Secure system engineering
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["AC-6"],   # Least privilege
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1083"],  # File and directory discovery
+                ],
+                ComplianceFramework.PCI_DSS: [
+                    PCI_DSS_CONTROLS["6.5.1"],
+                ],
+            },
+
+            # Confused Deputy / Tool Chaining (MCP-AI-005)
+            "MCP-AI-005": {
+                ComplianceFramework.ISO27001: [
+                    ISO27001_CONTROLS["A.14.2.1"],  # Secure development policy
+                    ISO27001_CONTROLS["A.9.4.1"],   # Information access restriction
+                ],
+                ComplianceFramework.NIST_CSF: [
+                    NIST_CSF_CONTROLS["PR.DS-5"],   # Protections against data leaks
+                    NIST_CSF_CONTROLS["DE.CM-1"],   # Network monitoring
+                ],
+                ComplianceFramework.NIST_800_53: [
+                    NIST_800_53_CONTROLS["AC-6"],   # Least privilege
+                    NIST_800_53_CONTROLS["SI-10"],  # Information input validation
+                ],
+                ComplianceFramework.MITRE_ATTCK: [
+                    MITRE_ATTCK_TECHNIQUES["T1190"],  # Exploit public-facing application
+                ],
+                ComplianceFramework.SOC2: [
+                    SOC2_CONTROLS["CC6.1"],
+                ],
+            },
+
             # Missing Security Headers (MCP-HDR-001)
             "MCP-HDR-001": {
                 ComplianceFramework.ISO27001: [

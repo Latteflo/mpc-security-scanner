@@ -26,6 +26,9 @@ from checks.debug_endpoints import check_debug_endpoints
 from checks.jwt_auth import check_jwt_auth
 from checks.capability_exposure import check_capability_exposure
 from checks.tool_dos import check_tool_dos
+from checks.protocol_version import check_protocol_version
+from checks.resource_traversal import check_resource_traversal
+from checks.confused_deputy import check_confused_deputy
 from compliance.mapper import ComplianceMapper
 
 console = Console()
@@ -73,6 +76,9 @@ class SecurityAnalyzer:
         await self._check_jwt_auth(server)
         await self._check_capability_exposure(server)
         await self._check_tool_dos(server)
+        await self._check_protocol_version(server)
+        await self._check_resource_traversal(server)
+        await self._check_confused_deputy(server)
 
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()
@@ -152,6 +158,27 @@ class SecurityAnalyzer:
     async def _check_tool_dos(self, server: MCPServer):
         """Check for unbounded tool output enabling context stuffing / resource exhaustion."""
         vuln = await check_tool_dos(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_protocol_version(self, server: MCPServer):
+        """Check that the server rejects bogus MCP protocol version strings."""
+        vuln = await check_protocol_version(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_resource_traversal(self, server: MCPServer):
+        """Check for path traversal via MCP resource URIs."""
+        vuln = await check_resource_traversal(server)
+        if vuln:
+            self.vulnerabilities.append(vuln)
+            logger.warning(f"Found: {vuln.title}")
+
+    async def _check_confused_deputy(self, server: MCPServer):
+        """Check for confused deputy / tool chaining abuse risk."""
+        vuln = await check_confused_deputy(server)
         if vuln:
             self.vulnerabilities.append(vuln)
             logger.warning(f"Found: {vuln.title}")
