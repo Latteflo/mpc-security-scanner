@@ -348,31 +348,40 @@ class PDFReportGenerator:
         ))
         elements.append(Spacer(1, 0.4 * cm))
 
-        # Risk score callout
-        risk_row = Table(
-            [[
-                Paragraph(str(risk),
-                          ParagraphStyle("_rs_num", fontName="Helvetica-Bold",
-                                         fontSize=40, leading=46,
-                                         textColor=risk_fg, alignment=TA_CENTER)),
-                Paragraph(
-                    f"<b>Risk Score</b><br/>{risk_label}<br/>"
-                    f"<font color='#64748b' size='9'>{len(vulns)} findings across "
-                    f"{len(cats)} categories</font>",
-                    ParagraphStyle("_rs_txt", fontName="Helvetica", fontSize=13,
-                                   leading=20, textColor=C["ink"])),
-            ]],
-            colWidths=[2.8 * cm, CONTENT_W - 2.8 * cm]
-        )
-        risk_row.setStyle(TableStyle([
+        # Stats bar — 4 tiles: Total, Critical, High, Risk Score
+        stats = [
+            ("Total Findings", str(len(vulns)),   C["ink"],       C["bg"]),
+            ("Critical",       str(sev["CRITICAL"]), C["critical"],  C["critical_bg"]),
+            ("High",           str(sev["HIGH"]),     C["high"],      C["high_bg"]),
+            ("Risk Score",     f"{risk}/100",        risk_fg,        C["bg"]),
+        ]
+        tile_w = CONTENT_W / len(stats)
+        num_cells = [
+            Paragraph(v, ParagraphStyle(f"_st_num_{k}", fontName="Helvetica-Bold",
+                                        fontSize=22, leading=26,
+                                        textColor=fg, alignment=TA_CENTER))
+            for k, v, fg, _ in stats
+        ]
+        lbl_cells = [
+            Paragraph(k, ParagraphStyle(f"_st_lbl_{k}", fontName="Helvetica",
+                                        fontSize=8, leading=11,
+                                        textColor=fg, alignment=TA_CENTER))
+            for k, v, fg, _ in stats
+        ]
+        stats_t = Table([num_cells, lbl_cells], colWidths=[tile_w] * len(stats),
+                        rowHeights=[1.3 * cm, 0.55 * cm])
+        ts_style = [
+            ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
             ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
-            ("LEFTPADDING",   (0, 0), (-1, -1), 12),
-            ("TOPPADDING",    (0, 0), (-1, -1), 10),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-            ("BACKGROUND",    (0, 0), (-1, -1), C["bg"]),
+            ("TOPPADDING",    (0, 0), (-1, 0),  8),
+            ("BOTTOMPADDING", (0, -1),(-1, -1), 8),
             ("BOX",           (0, 0), (-1, -1), 1, C["border"]),
-        ]))
-        elements.append(risk_row)
+            ("LINEAFTER",     (0, 0), (-2, -1), 0.5, C["border"]),
+        ]
+        for col_idx, (k, v, fg, bg) in enumerate(stats):
+            ts_style.append(("BACKGROUND", (col_idx, 0), (col_idx, -1), bg))
+        stats_t.setStyle(TableStyle(ts_style))
+        elements.append(stats_t)
         elements.append(Spacer(1, 0.5 * cm))
 
         # Intro paragraph

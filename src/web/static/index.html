@@ -42,6 +42,16 @@
     position: sticky; top: 0; z-index: 10;
   }
   .topbar h2 { font-size: 17px; font-weight: 600; color: #1a1d2e; }
+  .topbar-export { display: flex; align-items: center; gap: 8px; }
+  .fmt-btn {
+    padding: 4px 9px; font-size: 11px; font-weight: 600;
+    border: 1px solid #e2e8f0; border-radius: 4px;
+    background: #f8fafc; color: #64748b; cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .fmt-btn:hover  { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+  .fmt-btn.active { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
   .topbar-badge {
     background: #ede9fe; color: #5b21b6; font-size: 11px; font-weight: 600;
     padding: 2px 8px; border-radius: 20px;
@@ -379,6 +389,15 @@
       <h2 id="topbar-title">New Scan</h2>
       <span class="topbar-badge" id="topbar-badge"></span>
       <span style="flex:1"></span>
+      <!-- Compact export bar — visible only on Results section -->
+      <div class="topbar-export hidden" id="topbar-export">
+        <span style="font-size:11px;color:#94a3b8;white-space:nowrap;">Export:</span>
+        <button class="fmt-btn active" data-fmt="json"  onclick="selectExportFmt('json')">JSON</button>
+        <button class="fmt-btn"        data-fmt="html"  onclick="selectExportFmt('html')">HTML</button>
+        <button class="fmt-btn"        data-fmt="pdf"   onclick="selectExportFmt('pdf')">PDF</button>
+        <button class="fmt-btn"        data-fmt="sarif" onclick="selectExportFmt('sarif')">SARIF</button>
+        <button class="btn btn-success" id="btn-topbar-dl" onclick="exportReport()" style="padding:6px 14px;font-size:12px;">↓ Download</button>
+      </div>
       <button class="btn btn-secondary hidden" id="btn-new-scan" onclick="resetToScan()">+ New Scan</button>
     </div>
 
@@ -599,6 +618,7 @@ function showSection(name) {
   if (nav) nav.classList.add('active');
 
   document.getElementById('topbar-title').textContent = SECTIONS[name] || name;
+  document.getElementById('topbar-export').classList.toggle('hidden', name !== 'results');
   currentSection = name;
   closeSidebar();
 
@@ -1017,17 +1037,16 @@ let _exportFmt = 'json';
 
 function selectExportFmt(fmt) {
   _exportFmt = fmt;
-  document.querySelectorAll('.export-tile').forEach(el => {
+  document.querySelectorAll('.export-tile, .fmt-btn').forEach(el => {
     el.classList.toggle('active', el.dataset.fmt === fmt);
   });
 }
 
 async function exportReport() {
   if (!currentScanId) return;
-  const btn = document.querySelector('#export-card .btn-success');
-  const orig = btn.textContent;
-  btn.textContent = '⟳ Generating…';
-  btn.disabled = true;
+  const btns = document.querySelectorAll('#export-card .btn-success, #btn-topbar-dl');
+  btns.forEach(b => { b.textContent = '⟳ Generating…'; b.disabled = true; });
+  const btn = btns[0]; const orig = '↓ Download Report';
   try {
     const res = await fetch('/api/scan/' + currentScanId + '/export', {
       method: 'POST',
@@ -1045,8 +1064,7 @@ async function exportReport() {
   } catch (e) {
     alert('Export failed: ' + e.message);
   } finally {
-    btn.textContent = orig;
-    btn.disabled = false;
+    btns.forEach(b => { b.textContent = b.id === 'btn-topbar-dl' ? '↓ Download' : '↓ Download Report'; b.disabled = false; });
   }
 }
 
