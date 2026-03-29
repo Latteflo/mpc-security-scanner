@@ -235,6 +235,35 @@
   .ctrl-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
   .ctrl-triggered { font-size: 11px; color: #be123c; margin-top: 4px; font-weight: 600; }
 
+  /* ── History section ── */
+  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .history-table th {
+    text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .4px; color: #94a3b8; padding: 8px 12px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  .history-table td { padding: 12px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr:hover td { background: #f8fafc; }
+  .history-row { cursor: pointer; }
+  .history-target { font-weight: 600; color: #1a1d2e; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-time { color: #64748b; font-size: 12px; white-space: nowrap; }
+  .history-counts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sev-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+  .sev-badge-critical { background: #fee2e2; color: #b91c1c; }
+  .sev-badge-high     { background: #ffedd5; color: #c2410c; }
+  .sev-badge-medium   { background: #fef9c3; color: #854d0e; }
+  .sev-badge-low      { background: #dbeafe; color: #1d4ed8; }
+  .sev-badge-info     { background: #d1fae5; color: #065f46; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .status-dot-complete { background: #059669; }
+  .status-dot-running  { background: #7c83f7; animation: pulse 1s infinite; }
+  .status-dot-error    { background: #be123c; }
+  .status-dot-pending  { background: #94a3b8; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .history-empty { text-align: center; padding: 48px; color: #94a3b8; font-size: 13px; }
+  .history-empty div:first-child { font-size: 32px; margin-bottom: 10px; }
+
   /* ── Error section ── */
   .error-banner { background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 10px; padding: 24px; color: #be123c; }
   .error-banner h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
@@ -310,8 +339,11 @@
       <div class="nav-item" id="nav-compliance" onclick="showSection('results'); switchTab('compliance')">
         <span class="nav-icon">◉</span> Compliance
       </div>
+      <div class="nav-item" id="nav-history" onclick="showSection('history')">
+        <span class="nav-icon">◷</span> History
+      </div>
     </nav>
-    <div class="sidebar-footer">v0.2.1 · MIT License</div>
+    <div class="sidebar-footer">v0.3.0 · MIT License</div>
   </aside>
 
   <!-- ── Main ── -->
@@ -455,6 +487,14 @@
         </div>
       </div>
 
+      <!-- ── History ── -->
+      <div id="section-history" class="hidden">
+        <div class="card">
+          <h3>Scan History</h3>
+          <div id="history-body"></div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /layout -->
@@ -481,6 +521,7 @@ async function init() {
   } catch (e) {
     console.warn('Could not load frameworks:', e);
   }
+  loadHistory();
 }
 
 // ── Sidebar toggle (mobile) ─────────────────────────────────────────────────
@@ -495,7 +536,7 @@ function closeSidebar() {
 }
 
 // ── Navigation ──────────────────────────────────────────────────────────────
-const SECTIONS = { scan: 'New Scan', results: 'Results', compliance: 'Compliance' };
+const SECTIONS = { scan: 'New Scan', results: 'Results', compliance: 'Compliance', history: 'Scan History' };
 
 function showSection(name) {
   document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
@@ -509,6 +550,8 @@ function showSection(name) {
   document.getElementById('topbar-title').textContent = SECTIONS[name] || name;
   currentSection = name;
   closeSidebar();
+
+  if (name === 'history') loadHistory();
 }
 
 function switchTab(name) {
@@ -682,6 +725,7 @@ function handleComplete(event) {
     event.vulnerabilities.length + ' finding(s)');
 
   // Switch to results view after a brief pause so the user sees the complete log
+  loadHistory();  // refresh history list in background
   setTimeout(() => {
     renderResults(event);
     showSectionDirect('results');
@@ -983,6 +1027,125 @@ function escHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/scans');
+    const data = await res.json();
+    renderHistory(data.scans);
+  } catch (e) {
+    console.warn('Could not load scan history:', e);
+  }
+}
+
+function renderHistory(scans) {
+  const body = document.getElementById('history-body');
+  if (!body) return;
+
+  // Update History nav badge
+  const histNav = document.getElementById('nav-history');
+  if (histNav && scans.length > 0) {
+    histNav.querySelector('.nav-icon').textContent = '◷';
+  }
+
+  if (!scans || scans.length === 0) {
+    body.innerHTML = `
+      <div class="history-empty">
+        <div>◷</div>
+        <div>No scans yet — run your first scan to see history here.</div>
+      </div>`;
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'history-table';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Target</th>
+        <th>Date &amp; Time</th>
+        <th>Findings</th>
+        <th>Risk Score</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>`;
+
+  const tbody = document.createElement('tbody');
+  scans.forEach(scan => {
+    const tr = document.createElement('tr');
+    tr.className = 'history-row';
+
+    const dt = new Date(scan.created_at);
+    const dateStr = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+    const counts = scan.severity_counts || {};
+    const badges = ['CRITICAL','HIGH','MEDIUM','LOW','INFO']
+      .filter(s => counts[s] > 0)
+      .map(s => `<span class="sev-badge sev-badge-${s.toLowerCase()}">${counts[s]} ${s}</span>`)
+      .join('');
+    const totalFindings = scan.total_findings || 0;
+
+    const statusDot = `<span class="status-dot status-dot-${scan.status}"></span>`;
+    const statusText = scan.status.charAt(0).toUpperCase() + scan.status.slice(1);
+
+    const canView = scan.status === 'complete';
+    const viewBtn = canView
+      ? `<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="restoreFromHistory('${escHtml(scan.scan_id)}');event.stopPropagation()">View</button>`
+      : `<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;opacity:.4" disabled>View</button>`;
+
+    tr.innerHTML = `
+      <td><div class="history-target" title="${escHtml(scan.target)}">${escHtml(scan.target)}</div></td>
+      <td><div class="history-time">${escHtml(dateStr)}<br><span style="color:#94a3b8">${escHtml(timeStr)}</span></div></td>
+      <td>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">${totalFindings} finding${totalFindings !== 1 ? 's' : ''}</div>
+        <div class="history-counts">${badges || '<span style="color:#94a3b8;font-size:12px;">—</span>'}</div>
+      </td>
+      <td><span style="font-size:16px;font-weight:800;color:${riskColor(scan.risk_score)}">${scan.risk_score != null ? scan.risk_score : '—'}</span></td>
+      <td>${statusDot}${escHtml(statusText)}</td>
+      <td>${viewBtn}</td>`;
+
+    if (canView) {
+      tr.onclick = () => restoreFromHistory(scan.scan_id);
+    }
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  body.innerHTML = '';
+  body.appendChild(table);
+}
+
+async function restoreFromHistory(scanId) {
+  try {
+    const res = await fetch('/api/scan/' + scanId + '/result');
+    if (!res.ok) throw new Error('Result not available');
+    const data = await res.json();
+
+    currentScanId = scanId;
+    currentResults = data;
+    renderResults(data);
+    showSectionDirect('results');
+    document.getElementById('nav-results').classList.add('active');
+    document.getElementById('topbar-title').textContent = 'Results';
+    document.getElementById('topbar-badge').textContent = data.vulnerabilities.length + ' finding(s)';
+    document.getElementById('btn-new-scan').classList.remove('hidden');
+    if (data.report_available) {
+      document.getElementById('btn-download').classList.remove('hidden');
+    }
+  } catch (e) {
+    alert('Could not restore scan results: ' + e.message);
+  }
+}
+
+function riskColor(score) {
+  if (score == null) return '#94a3b8';
+  if (score >= 70) return '#be123c';
+  if (score >= 30) return '#d97706';
+  return '#059669';
 }
 
 // ── Boot ─────────────────────────────────────────────────────────────────────

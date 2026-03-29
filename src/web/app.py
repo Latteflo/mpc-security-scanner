@@ -75,6 +75,10 @@ class ScanState:
     report_path: str | None = None
     error: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+    # Cached result payload from the "complete" event — used by history restore.
+    result_data: dict | None = None
+    # Severity summary — populated on completion for the history list.
+    severity_counts: dict = field(default_factory=dict)
 
 
 # Module-level store; keyed by scan_id.
@@ -205,7 +209,7 @@ async def _run_scan(state: ScanState) -> None:
 
         compliance_report = _build_compliance_report(vulnerabilities, analyzer.compliance_mapper)
 
-        emit({
+        complete_event = {
             "type": "complete",
             "scan_id": state.scan_id,
             "summary": {**severity_counts, "risk_score": risk_score},
@@ -213,7 +217,10 @@ async def _run_scan(state: ScanState) -> None:
             "compliance_report": compliance_report,
             "report_available": state.fmt != "terminal",
             "duration_seconds": (datetime.utcnow() - state.created_at).total_seconds(),
-        })
+        }
+        emit(complete_event)
+        state.result_data = complete_event
+        state.severity_counts = severity_counts
         state.status = "complete"
 
     except Exception as exc:  # noqa: BLE001
@@ -387,6 +394,36 @@ def create_app() -> FastAPI:
                 for f in ComplianceFramework
             ]
         }
+
+    # ── Scan history list ─────────────────────────────────────────────────────
+
+    @app.get("/api/scans")
+    async def list_scans():
+        """Return a summary of all scans, newest first."""
+        scans = []
+        for state in sorted(_scans.values(), key=lambda s: s.created_at, reverse=True):
+            scans.append({
+                "scan_id": state.scan_id,
+                "target": state.target,
+                "status": state.status,
+                "created_at": state.created_at.isoformat() + "Z",
+                "severity_counts": state.severity_counts,
+                "total_findings": sum(state.severity_counts.values()),
+                "risk_score": state.result_data["summary"]["risk_score"] if state.result_data else None,
+                "error": state.error,
+            })
+        return {"scans": scans}
+
+    # ── Restore completed scan result ─────────────────────────────────────────
+
+    @app.get("/api/scan/{scan_id}/result")
+    async def get_scan_result(scan_id: str):
+        state = _scans.get(scan_id)
+        if not state:
+            raise HTTPException(status_code=404, detail="Scan not found")
+        if state.status != "complete" or not state.result_data:
+            raise HTTPException(status_code=409, detail="Result not available")
+        return state.result_data
 
     # ── Start scan ────────────────────────────────────────────────────────────
 
