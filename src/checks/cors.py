@@ -39,8 +39,11 @@ async def check_cors_misconfiguration(server: MCPServer) -> Optional[Vulnerabili
             timeout=10.0
         )
         
-        # Check for overly permissive CORS
-        acao = response_headers.get("access-control-allow-origin", "").lower()
+        # Check for overly permissive CORS (case-insensitive header lookup)
+        acao = next(
+            (v for k, v in response_headers.items() if k.lower() == "access-control-allow-origin"),
+            ""
+        ).lower()
         
         if acao == "*":
             return Vulnerability.create(

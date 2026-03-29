@@ -83,8 +83,8 @@ class SecurityAnalyzer:
         await self._check_resource_traversal(server)
         await self._check_confused_deputy(server)
         await self._check_xxe(server)
-        await self._check_redos(server)
         await self._check_oauth_scope(server)
+        await self._check_redos(server)  # run last — may block server event loop briefly
 
         # Add compliance mappings to all vulnerabilities
         self._add_compliance_mappings()

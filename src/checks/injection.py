@@ -255,6 +255,10 @@ async def check_path_traversal(server: MCPServer) -> Optional[Vulnerability]:
 
     path_payloads = [
         "../../etc/passwd",
+        "../../../etc/passwd",
+        "../../../../etc/passwd",
+        "../../../../../etc/passwd",
+        "/etc/passwd",
         "..\\..\\windows\\system32\\config\\sam",
         "....//....//etc/passwd",
         "%2e%2e%2f%2e%2e%2fetc%2fpasswd",
@@ -281,7 +285,7 @@ async def check_path_traversal(server: MCPServer) -> Optional[Vulnerability]:
     ]
 
     for tool in file_tools:
-        for payload in path_payloads[:2]:
+        for payload in path_payloads:
             try:
                 request_data = {
                     "jsonrpc": "2.0",

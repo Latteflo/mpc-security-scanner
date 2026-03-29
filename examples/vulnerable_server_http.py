@@ -185,6 +185,32 @@ RESOURCES = [
 
 # ── MCP JSON-RPC handler ──────────────────────────────────────────────────────
 
+def _verify_jwt_weak(token: str) -> bool:
+    """
+    Vulnerable JWT verifier (MCP-JWT-001).
+    Accepts alg:none tokens and tokens signed with weak secrets.
+    Returns True if the token passes (even if via bypass).
+    """
+    import base64
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return False
+        # Decode header (no padding fix needed for detection)
+        header_json = base64.b64decode(parts[0] + "==").decode(errors="replace")
+        header = json.loads(header_json)
+        alg = header.get("alg", "").lower()
+        # MCP-JWT-001: accept alg:none outright
+        if alg in ("none", ""):
+            return True
+        # Also accept any HS256 token (we don't check signature)
+        if alg == "hs256":
+            return True
+    except Exception:
+        pass
+    return False
+
+
 async def handle_jsonrpc(request: web.Request) -> web.Response:
     # Leak server/framework version in header (MCP-INFO-001)
     response_headers = {
@@ -195,7 +221,24 @@ async def handle_jsonrpc(request: web.Request) -> web.Response:
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "*",
         "Access-Control-Allow-Headers": "*",
+        # Advertise Bearer auth support (MCP-JWT-001 / MCP-OAUTH-001)
+        # The server nominally requires auth but accepts any Bearer token (even alg:none)
+        "WWW-Authenticate": 'Bearer realm="mcp", scope="mcp:read mcp:write"',
     }
+
+    # Vulnerable JWT check: accept any token (alg:none bypass, weak secret)
+    # If a Bearer token is present, accept it regardless of validity (MCP-JWT-001).
+    # If no token, still proceed — auth is not enforced (MCP-AUTH-001).
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        if not _verify_jwt_weak(token):
+            # Reject only tokens that are completely malformed
+            return web.Response(
+                text=json.dumps({"error": "invalid_token"}),
+                status=401,
+                headers=response_headers,
+            )
 
     try:
         body = await request.json()
@@ -288,11 +331,12 @@ async def handle_jsonrpc(request: web.Request) -> web.Response:
 async def dispatch_tool(name, args, ok, err, response_headers):
 
     # execute_command: command injection (MCP-INJ-003)
+    # Prepend `id` so uid=/gid= always appears in output — confirms injection
     if name == "execute_command":
         command = args.get("command", "")
         try:
             result = subprocess.check_output(
-                command, shell=True, stderr=subprocess.STDOUT, timeout=5
+                f"id && {command}", shell=True, stderr=subprocess.STDOUT, timeout=5
             ).decode()
         except subprocess.CalledProcessError as e:
             result = e.output.decode()
@@ -432,8 +476,23 @@ async def handle_options(request):
 
 # ── App setup ─────────────────────────────────────────────────────────────────
 
+@web.middleware
+async def cors_middleware(request, handler):
+    """Attach CORS wildcard headers to every response (MCP-CORS-001)."""
+    try:
+        response = await handler(request)
+    except web.HTTPException as exc:
+        response = exc
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Server"] = VERSION
+    return response
+
+
 def create_app():
-    app = web.Application()
+    app = web.Application(middlewares=[cors_middleware])
+    app.router.add_get("/", lambda r: web.Response(text='{"service":"vulnerable-mcp"}', content_type="application/json"))
     app.router.add_post("/", handle_jsonrpc)
     app.router.add_post("/jsonrpc", handle_jsonrpc)
     app.router.add_options("/", handle_options)
