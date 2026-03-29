@@ -55,22 +55,14 @@ result
 result-*
 .direnv/
 
-# Generated reports — keep the directory structure, ignore outputs.
-# SARIF files may contain sensitive scan data and are large; upload them
-# as CI artifacts or to the GitHub Security tab instead of committing them.
-reports/scans/
-reports/compliance/
-reports/*.json
-reports/*.html
-reports/*.pdf
-reports/*.md
-reports/*.sarif
+# Generated reports — keep directory placeholders, ignore all outputs.
+reports/scans/*
+reports/compliance/*
+reports/demos/*
 !reports/.gitkeep
-!reports/demos/
+!reports/scans/.gitkeep
+!reports/compliance/.gitkeep
 !reports/demos/.gitkeep
-!reports/demos/*.json
-!reports/demos/*.html
-!reports/demos/*.md
 
 # Baseline files produced by --save-baseline (may contain internal host info)
 *.baseline.json
