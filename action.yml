@@ -2,4 +2,4 @@ name: 'MCP Security Scanner'
 description: 'Scan MCP servers for vulnerabilities'
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'docker/Dockerfile'

@@ -1,53 +1,49 @@
-.PHONY: help build run test clean scan shell demo
+.PHONY: help build build-test run scan demo shell up down logs test clean clean-all
 
-IMAGE_NAME := mcp-security-scanner
-VERSION := latest
+IMAGE_NAME  := mcp-security-scanner
+VERSION     := latest
 REPORTS_DIR := $(PWD)/reports
+COMPOSE     := docker-compose -f docker/docker-compose.yml
 
 help:
-	@echo "🔒 MCP Security Scanner - Docker Commands"
-	@echo "=========================================="
+	@echo "MCP Security Scanner"
+	@echo "===================="
 	@echo ""
 	@echo "Building:"
-	@echo "  make build              - Build Docker image"
-	@echo "  make build-test         - Build test server image"
+	@echo "  make build         Build the scanner Docker image"
+	@echo "  make build-test    Build the test server image"
 	@echo ""
 	@echo "Running:"
-	@echo "  make run                - Show help"
-	@echo "  make scan               - Interactive scan"
-	@echo "  make demo               - Run demo scan"
-	@echo "  make shell              - Open shell in container"
+	@echo "  make scan          Interactive scan (prompts for target URL)"
+	@echo "  make demo          Run a demo scan against the test server"
+	@echo "  make shell         Open a shell in the scanner container"
 	@echo ""
 	@echo "Docker Compose:"
-	@echo "  make up                 - Start all services"
-	@echo "  make down               - Stop all services"
-	@echo "  make logs               - View logs"
+	@echo "  make up            Start scanner + test server"
+	@echo "  make down          Stop all services"
+	@echo "  make logs          Tail service logs"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make test               - Run tests in Docker"
+	@echo "  make test          Run pytest suite in Docker"
 	@echo ""
 	@echo "Maintenance:"
-	@echo "  make clean              - Clean up containers"
-	@echo "  make clean-all          - Clean everything"
+	@echo "  make clean         Remove stopped containers"
+	@echo "  make clean-all     Remove containers and generated reports"
 	@echo ""
 
 build:
-	@echo "🔨 Building Docker image..."
-	docker build -t $(IMAGE_NAME):$(VERSION) .
-	@echo "✅ Build complete!"
+	docker build -f docker/Dockerfile -t $(IMAGE_NAME):$(VERSION) .
 
 build-test:
-	@echo "🔨 Building test server image..."
-	docker build -f Dockerfile.test-server -t $(IMAGE_NAME)-test:$(VERSION) .
-	@echo "✅ Test server image built!"
+	docker build -f docker/Dockerfile.test-server -t $(IMAGE_NAME)-test:$(VERSION) .
 
 run:
-	@docker run --rm $(IMAGE_NAME):$(VERSION)
+	docker run --rm $(IMAGE_NAME):$(VERSION)
 
 scan:
-	@echo "🔍 Enter target URL (e.g., http://localhost:3000):"
+	@echo "Enter target URL (e.g., http://localhost:3000):"
 	@read target; \
-	echo "📋 Select format (json/html/pdf/terminal) [default: html]:"; \
+	echo "Select format (json/html/pdf/terminal) [default: html]:"; \
 	read format; \
 	format=$${format:-html}; \
 	docker run --rm \
@@ -57,16 +53,14 @@ scan:
 		scan --target $$target --format $$format --output reports/scan_$$(date +%Y%m%d_%H%M%S).$$format
 
 demo:
-	@echo "🎬 Running demo scan..."
 	@docker run --rm \
 		-v $(REPORTS_DIR):/app/reports \
+		--network host \
 		$(IMAGE_NAME):$(VERSION) \
-		python test_scanner.py
-	@echo "✅ Demo complete! Check reports/demo_scan.html"
+		scan --target http://localhost:3000 --format html --output reports/demo.html
 
 shell:
-	@echo "🐚 Opening shell in container..."
-	@docker run --rm -it \
+	docker run --rm -it \
 		-v $(PWD)/src:/app/src \
 		-v $(REPORTS_DIR):/app/reports \
 		--network host \
@@ -74,34 +68,24 @@ shell:
 		bash
 
 up:
-	@echo "🚀 Starting services..."
-	@docker-compose up -d
-	@echo "✅ Services started!"
-	@docker-compose ps
+	$(COMPOSE) up -d
+	$(COMPOSE) ps
 
 down:
-	@echo "🛑 Stopping services..."
-	@docker-compose down
-	@echo "✅ Services stopped!"
+	$(COMPOSE) down
 
 logs:
-	@docker-compose logs -f --tail=100
+	$(COMPOSE) logs -f --tail=100
 
 test:
-	@echo "🧪 Running tests in Docker..."
-	@docker run --rm \
+	docker run --rm \
 		-v $(PWD)/tests:/app/tests \
 		-v $(PWD)/src:/app/src \
 		$(IMAGE_NAME):$(VERSION) \
 		pytest -v
-	@echo "✅ Tests complete!"
 
 clean:
-	@echo "🧹 Cleaning up..."
-	@docker ps -aq -f name=mcp | xargs -r docker rm -f || true
-	@echo "✅ Cleanup complete!"
+	docker ps -aq -f name=mcp | xargs -r docker rm -f || true
 
 clean-all: clean
-	@echo "🧹 Cleaning reports..."
-	@rm -rf reports/*.html reports/*.json reports/*.pdf || true
-	@echo "✅ All clean!"
+	rm -rf reports/scans/* reports/compliance/* reports/demos/* || true
