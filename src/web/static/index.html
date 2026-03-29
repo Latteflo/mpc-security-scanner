@@ -144,13 +144,6 @@
   .sc-risk     .label { color: #64748b; }
 
   /* ── Findings list ── */
-  .findings-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
-  .tab-btn {
-    padding: 10px 20px; font-size: 13px; font-weight: 600; color: #94a3b8;
-    border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
-    margin-bottom: -2px; transition: color .15s, border-color .15s;
-  }
-  .tab-btn.active { color: #7c83f7; border-bottom-color: #7c83f7; }
 
   .severity-group { margin-bottom: 24px; }
   .severity-group-header {
@@ -351,7 +344,7 @@
       <div class="nav-item" id="nav-results" onclick="showSection('results')">
         <span class="nav-icon">◈</span> Results
       </div>
-      <div class="nav-item" id="nav-compliance" onclick="showSection('results'); switchTab('compliance')">
+      <div class="nav-item" id="nav-compliance" onclick="showSection('compliance')">
         <span class="nav-icon">◉</span> Compliance
       </div>
       <div class="nav-item" id="nav-history" onclick="showSection('history')">
@@ -456,51 +449,45 @@
         </div>
       </div>
 
-      <!-- ── Results ── -->
+      <!-- ── Results (Findings) ── -->
       <div id="section-results" class="hidden">
         <div class="card">
-          <div class="findings-tabs">
-            <button class="tab-btn active" id="tab-findings"   onclick="switchTab('findings')">Findings</button>
-            <button class="tab-btn"        id="tab-compliance" onclick="switchTab('compliance')">Compliance</button>
+          <!-- Severity count cards -->
+          <div class="summary-row" style="margin-bottom:20px;">
+            <div class="summary-card sc-critical"><div class="count" id="cnt-critical">0</div><div class="label">Critical</div></div>
+            <div class="summary-card sc-high">    <div class="count" id="cnt-high">0</div>    <div class="label">High</div></div>
+            <div class="summary-card sc-medium">  <div class="count" id="cnt-medium">0</div>  <div class="label">Medium</div></div>
+            <div class="summary-card sc-low">     <div class="count" id="cnt-low">0</div>     <div class="label">Low</div></div>
+            <div class="summary-card sc-risk">    <div class="count" id="cnt-risk">0</div>    <div class="label">Risk Score</div></div>
           </div>
+          <!-- Charts -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:24px;" id="charts-grid">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Severity Distribution</div>
+              <div id="chart-donut" style="display:flex;align-items:center;gap:20px;"></div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Findings by Category</div>
+              <div id="chart-categories"></div>
+            </div>
+          </div>
+          <!-- Finding list -->
+          <div id="findings-list"></div>
+        </div>
+      </div>
 
-          <!-- ── Findings pane ── -->
-          <div id="pane-findings">
-            <!-- Severity count cards -->
-            <div class="summary-row" style="margin-bottom:20px;">
-              <div class="summary-card sc-critical"><div class="count" id="cnt-critical">0</div><div class="label">Critical</div></div>
-              <div class="summary-card sc-high">    <div class="count" id="cnt-high">0</div>    <div class="label">High</div></div>
-              <div class="summary-card sc-medium">  <div class="count" id="cnt-medium">0</div>  <div class="label">Medium</div></div>
-              <div class="summary-card sc-low">     <div class="count" id="cnt-low">0</div>     <div class="label">Low</div></div>
-              <div class="summary-card sc-risk">    <div class="count" id="cnt-risk">0</div>    <div class="label">Risk Score</div></div>
-            </div>
-            <!-- Charts -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:24px;" id="charts-grid">
-              <div>
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Severity Distribution</div>
-                <div id="chart-donut" style="display:flex;align-items:center;gap:20px;"></div>
-              </div>
-              <div>
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px;">Findings by Category</div>
-                <div id="chart-categories"></div>
-              </div>
-            </div>
-            <!-- Finding list injected here -->
-            <div id="findings-list"></div>
+      <!-- ── Compliance ── -->
+      <div id="section-compliance" class="hidden">
+        <div class="card">
+          <!-- Framework score cards -->
+          <div id="fw-score-cards" style="margin-bottom:24px;"></div>
+          <!-- Coverage overview bar chart -->
+          <div style="margin-bottom:24px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:12px;">Coverage Overview</div>
+            <div id="compliance-overview-chart"></div>
           </div>
-
-          <!-- ── Compliance pane ── -->
-          <div id="pane-compliance" class="hidden">
-            <!-- Framework score cards -->
-            <div id="fw-score-cards" style="margin-bottom:24px;"></div>
-            <!-- Framework scores bar chart -->
-            <div style="margin-bottom:24px;">
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:12px;">Coverage Overview</div>
-              <div id="compliance-overview-chart"></div>
-            </div>
-            <!-- Framework pills + detail -->
-            <div id="fw-detail"></div>
-          </div>
+          <!-- Framework pills + detail -->
+          <div id="fw-detail"></div>
         </div>
       </div>
 
@@ -533,7 +520,6 @@
 let currentScanId = null;
 let currentResults = null;
 let currentSection = 'scan';
-let activeTab = 'findings';
 
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
@@ -565,7 +551,7 @@ function closeSidebar() {
 }
 
 // ── Navigation ──────────────────────────────────────────────────────────────
-const SECTIONS = { scan: 'New Scan', results: 'Results', compliance: 'Compliance', history: 'Scan History' };
+const SECTIONS = { scan: 'New Scan', results: 'Results', compliance: 'Compliance', history: 'Scan History', error: 'Scan Failed', progress: 'Scanning…' };
 
 function showSection(name) {
   document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
@@ -585,17 +571,8 @@ function showSection(name) {
 }
 
 function switchTab(name) {
-  ['findings', 'compliance'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('active', t === name);
-    document.getElementById('pane-' + t).classList.toggle('hidden', t !== name);
-  });
-  activeTab = name;
-  // keep the nav highlight in sync
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  const navName = name === 'compliance' ? 'compliance' : 'results';
-  const nav = document.getElementById('nav-' + navName);
-  if (nav) nav.classList.add('active');
-  document.getElementById('topbar-title').textContent = SECTIONS[navName] || navName;
+  // Tabs replaced by sidebar sections — delegate to showSection
+  showSection(name === 'compliance' ? 'compliance' : 'results');
 }
 
 // ── Scan ────────────────────────────────────────────────────────────────────
@@ -754,18 +731,13 @@ function handleComplete(event) {
   logLine('log-ok', '✓  Scan complete in ' + event.duration_seconds.toFixed(1) + 's — ' +
     event.vulnerabilities.length + ' finding(s)');
 
-  // Refresh history and recent-scans in background
   loadHistory();
   setTimeout(() => {
     renderResults(event);
     showSectionDirect('results');
     document.getElementById('nav-results').classList.add('active');
-    document.getElementById('topbar-title').textContent = 'Results';
-    document.getElementById('topbar-badge').textContent =
-      event.vulnerabilities.length + ' finding(s)';
-    if (event.report_available) {
-      document.getElementById('btn-download').classList.remove('hidden');
-    }
+    document.getElementById('topbar-badge').textContent = event.vulnerabilities.length + ' finding(s)';
+    if (event.report_available) document.getElementById('btn-download').classList.remove('hidden');
   }, 800);
 }
 
@@ -896,7 +868,7 @@ function renderCompliance(complianceReport) {
       <div style="font-size:26px;font-weight:800;color:${col};line-height:1;">${d.score}%</div>
       <div style="font-size:10px;font-weight:700;color:${col};margin-top:4px;text-transform:uppercase;letter-spacing:.4px;">${escHtml(FW_LABELS[fw] || fw)}</div>
       <div style="font-size:11px;color:#94a3b8;margin-top:6px;">${d.failing} failing · ${d.passing} passing</div>`;
-    card.onclick = () => { switchTab('compliance'); selectFramework(fw); };
+    card.onclick = () => { showSection('compliance'); selectFramework(fw); };
     card.onmouseenter = () => card.style.boxShadow = '0 2px 8px rgba(0,0,0,.1)';
     card.onmouseleave = () => card.style.boxShadow = '';
     scoreGrid.appendChild(card);
@@ -1358,15 +1330,12 @@ async function restoreFromHistory(scanId) {
 
     currentScanId = scanId;
     currentResults = data;
+    currentScanId = scanId;
     renderResults(data);
-    showSectionDirect('results');
-    document.getElementById('nav-results').classList.add('active');
-    document.getElementById('topbar-title').textContent = 'Results';
+    showSection('results');
     document.getElementById('topbar-badge').textContent = data.vulnerabilities.length + ' finding(s)';
     document.getElementById('btn-new-scan').classList.remove('hidden');
-    if (data.report_available) {
-      document.getElementById('btn-download').classList.remove('hidden');
-    }
+    if (data.report_available) document.getElementById('btn-download').classList.remove('hidden');
   } catch (e) {
     alert('Could not restore scan results: ' + e.message);
   }
