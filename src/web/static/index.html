@@ -228,6 +228,22 @@
   .ctrl-desc { font-size: 12px; color: #64748b; margin-top: 2px; }
   .ctrl-triggered { font-size: 11px; color: #be123c; margin-top: 4px; font-weight: 600; }
 
+  /* ── Export card ── */
+  .export-formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .export-tile {
+    border: 2px solid #e2e8f0; border-radius: 10px; padding: 16px 14px;
+    cursor: pointer; transition: border-color .15s, background .15s;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .export-tile:hover { border-color: #a5b4fc; background: #f8faff; }
+  .export-tile.active { border-color: #7c83f7; background: #eef2ff; }
+  .export-icon { font-size: 22px; color: #94a3b8; }
+  .export-tile.active .export-icon { color: #4338ca; }
+  .export-name { font-size: 14px; font-weight: 700; color: #1a1d2e; }
+  .export-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+  @media (max-width: 768px) { .export-formats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .export-formats { grid-template-columns: 1fr; } }
+
   /* ── Charts ── */
   .donut-legend { display: flex; flex-direction: column; gap: 7px; }
   .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
@@ -364,7 +380,6 @@
       <span class="topbar-badge" id="topbar-badge"></span>
       <span style="flex:1"></span>
       <button class="btn btn-secondary hidden" id="btn-new-scan" onclick="resetToScan()">+ New Scan</button>
-      <button class="btn btn-success hidden" id="btn-download" onclick="downloadReport()">↓ Download Report</button>
     </div>
 
     <div class="content">
@@ -382,15 +397,6 @@
               <label>Compliance Framework</label>
               <select id="framework">
                 <option value="">None (vulnerability scan only)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Report Format</label>
-              <select id="format">
-                <option value="json">JSON</option>
-                <option value="html">HTML</option>
-                <option value="pdf">PDF</option>
-                <option value="sarif">SARIF</option>
               </select>
             </div>
           </div>
@@ -473,6 +479,36 @@
           </div>
           <!-- Finding list -->
           <div id="findings-list"></div>
+        </div>
+
+        <!-- ── Export card ── -->
+        <div class="card" id="export-card">
+          <h3>Export Report</h3>
+          <div class="export-formats" id="export-formats">
+            <div class="export-tile active" data-fmt="json" onclick="selectExportFmt('json')">
+              <div class="export-icon">{ }</div>
+              <div class="export-name">JSON</div>
+              <div class="export-desc">Raw findings data — machine-readable, use in CI/CD pipelines or custom tooling</div>
+            </div>
+            <div class="export-tile" data-fmt="html" onclick="selectExportFmt('html')">
+              <div class="export-icon">⬡</div>
+              <div class="export-name">HTML</div>
+              <div class="export-desc">Self-contained report — open in any browser, share with stakeholders</div>
+            </div>
+            <div class="export-tile" data-fmt="pdf" onclick="selectExportFmt('pdf')">
+              <div class="export-icon">▤</div>
+              <div class="export-name">PDF</div>
+              <div class="export-desc">Print-ready report — formal documentation, audit trails</div>
+            </div>
+            <div class="export-tile" data-fmt="sarif" onclick="selectExportFmt('sarif')">
+              <div class="export-icon">◈</div>
+              <div class="export-name">SARIF</div>
+              <div class="export-desc">Static Analysis Results Interchange Format — upload to GitHub Security tab, VS Code Problems pane</div>
+            </div>
+          </div>
+          <div class="flex-end mt-12">
+            <button class="btn btn-success" onclick="exportReport()">↓ Download Report</button>
+          </div>
         </div>
       </div>
 
@@ -581,20 +617,17 @@ async function startScan() {
   if (!target) { alert('Please enter a target URL.'); return; }
 
   const framework = document.getElementById('framework').value || null;
-  const format    = document.getElementById('format').value;
 
-  // Switch to progress view
   resetProgress();
   showSectionDirect('progress');
   document.getElementById('btn-new-scan').classList.remove('hidden');
-  document.getElementById('btn-download').classList.add('hidden');
   document.getElementById('topbar-badge').textContent = '';
 
   try {
     const res = await fetch('/api/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target, format, framework }),
+      body: JSON.stringify({ target, framework }),
     });
     const data = await res.json();
     currentScanId = data.scan_id;
@@ -737,7 +770,6 @@ function handleComplete(event) {
     showSectionDirect('results');
     document.getElementById('nav-results').classList.add('active');
     document.getElementById('topbar-badge').textContent = event.vulnerabilities.length + ' finding(s)';
-    if (event.report_available) document.getElementById('btn-download').classList.remove('hidden');
   }, 800);
 }
 
@@ -980,10 +1012,42 @@ function makeCtrlRow(c, status) {
   return row;
 }
 
-// ── Report download ──────────────────────────────────────────────────────────
-function downloadReport() {
+// ── Export ────────────────────────────────────────────────────────────────────
+let _exportFmt = 'json';
+
+function selectExportFmt(fmt) {
+  _exportFmt = fmt;
+  document.querySelectorAll('.export-tile').forEach(el => {
+    el.classList.toggle('active', el.dataset.fmt === fmt);
+  });
+}
+
+async function exportReport() {
   if (!currentScanId) return;
-  window.location.href = '/api/scan/' + currentScanId + '/report';
+  const btn = document.querySelector('#export-card .btn-success');
+  const orig = btn.textContent;
+  btn.textContent = '⟳ Generating…';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/scan/' + currentScanId + '/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ format: _exportFmt }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mcp-scan-${currentScanId.slice(0,8)}.${_exportFmt}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Export failed: ' + e.message);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
 }
 
 // ── Error handling ──────────────────────────────────────────────────────────
@@ -1000,7 +1064,6 @@ function resetToScan() {
   currentResults = null;
   showSection('scan');
   document.getElementById('btn-new-scan').classList.add('hidden');
-  document.getElementById('btn-download').classList.add('hidden');
   document.getElementById('topbar-badge').textContent = '';
 }
 
@@ -1335,7 +1398,6 @@ async function restoreFromHistory(scanId) {
     showSection('results');
     document.getElementById('topbar-badge').textContent = data.vulnerabilities.length + ' finding(s)';
     document.getElementById('btn-new-scan').classList.remove('hidden');
-    if (data.report_available) document.getElementById('btn-download').classList.remove('hidden');
   } catch (e) {
     alert('Could not restore scan results: ' + e.message);
   }

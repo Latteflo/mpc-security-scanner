@@ -79,6 +79,9 @@ class ScanState:
     result_data: dict | None = None
     # Severity summary — populated on completion for the history list.
     severity_counts: dict = field(default_factory=dict)
+    # Raw objects kept for on-demand export in any format.
+    _server_info: object = None
+    _vulnerabilities: list = field(default_factory=list)
 
 
 # Module-level store; keyed by scan_id.
@@ -91,8 +94,11 @@ _scans: dict[str, ScanState] = {}
 
 class ScanRequest(BaseModel):
     target: str
-    format: str = "json"
     framework: str | None = None
+
+
+class ExportRequest(BaseModel):
+    format: str = "json"  # json | html | pdf | sarif
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -182,20 +188,11 @@ async def _run_scan(state: ScanState) -> None:
         vulnerabilities = analyzer.vulnerabilities
 
         # ── Phase 3: Reporting ────────────────────────────────────────────────
-        emit({"type": "phase", "phase": "reporting", "message": "Generating report..."})
+        emit({"type": "phase", "phase": "reporting", "message": "Finalising scan..."})
 
-        tmp_dir = tempfile.mkdtemp(prefix="mcp-scan-")
-        ext = {"json": "json", "html": "html", "pdf": "pdf", "sarif": "sarif"}.get(state.fmt, "json")
-        report_path = str(Path(tmp_dir) / f"scan-{state.scan_id}.{ext}")
-
-        reporter = ReportGenerator()
-        await reporter.generate(
-            server_info=server_info,
-            vulnerabilities=vulnerabilities,
-            output_path=report_path,
-            format=state.fmt,
-        )
-        state.report_path = report_path
+        # Store objects for on-demand export — no format chosen yet.
+        state._server_info = server_info
+        state._vulnerabilities = vulnerabilities
 
         # ── Complete ──────────────────────────────────────────────────────────
         severity_counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
@@ -215,7 +212,7 @@ async def _run_scan(state: ScanState) -> None:
             "summary": {**severity_counts, "risk_score": risk_score},
             "vulnerabilities": [_vuln_to_dict(v) for v in vulnerabilities],
             "compliance_report": compliance_report,
-            "report_available": state.fmt != "terminal",
+            "report_available": False,
             "duration_seconds": (datetime.utcnow() - state.created_at).total_seconds(),
         }
         emit(complete_event)
@@ -434,7 +431,7 @@ def create_app() -> FastAPI:
         state = ScanState(
             scan_id=scan_id,
             target=req.target,
-            fmt=req.format,
+            fmt="json",   # unused — reports generated on demand via /export
             framework=req.framework,
         )
         _scans[scan_id] = state
@@ -457,29 +454,39 @@ def create_app() -> FastAPI:
             },
         )
 
-    # ── Download report ───────────────────────────────────────────────────────
+    # ── On-demand export (generate report in any format after scan) ───────────
 
-    @app.get("/api/scan/{scan_id}/report")
-    async def download_report(scan_id: str):
+    @app.post("/api/scan/{scan_id}/export")
+    async def export_scan(scan_id: str, req: ExportRequest):
         state = _scans.get(scan_id)
         if not state:
             raise HTTPException(status_code=404, detail="Scan not found")
-        if state.status != "complete" or not state.report_path:
-            raise HTTPException(status_code=409, detail="Report not ready")
-        path = Path(state.report_path)
-        if not path.exists():
-            raise HTTPException(status_code=410, detail="Report file no longer available")
+        if state.status != "complete" or not state._server_info:
+            raise HTTPException(status_code=409, detail="Scan not complete")
 
-        ext = path.suffix.lstrip(".")
+        fmt = req.format if req.format in ("json", "html", "pdf", "sarif") else "json"
+        ext_map = {"json": "json", "html": "html", "pdf": "pdf", "sarif": "sarif"}
+        ext = ext_map[fmt]
+        tmp_dir = tempfile.mkdtemp(prefix="mcp-export-")
+        report_path = str(Path(tmp_dir) / f"mcp-scan-{scan_id[:8]}.{ext}")
+
+        reporter = ReportGenerator()
+        await reporter.generate(
+            server_info=state._server_info,
+            vulnerabilities=state._vulnerabilities,
+            output_path=report_path,
+            format=fmt,
+        )
+
         media_types = {
-            "json": "application/json",
-            "html": "text/html",
-            "pdf":  "application/pdf",
+            "json":  "application/json",
+            "html":  "text/html",
+            "pdf":   "application/pdf",
             "sarif": "application/json",
         }
         return FileResponse(
-            path=state.report_path,
-            media_type=media_types.get(ext, "application/octet-stream"),
+            path=report_path,
+            media_type=media_types[fmt],
             filename=f"mcp-scan-{scan_id[:8]}.{ext}",
         )
 
